@@ -1,0 +1,190 @@
+import ctypes
+from enum import Enum
+
+
+class SampleSpec(ctypes.Structure):
+    _fields_ = [
+        # SampleFormat
+        ('format', ctypes.c_uint32),
+        ('rate', ctypes.c_uint32),
+        ('channels', ctypes.c_uint8)
+    ]
+
+
+class ChannelMap(ctypes.Structure):
+    pass
+
+
+class BufferAttributes(ctypes.Structure):
+    pass
+
+
+class StreamDirection(Enum):
+    # TODO: Remove prefixes
+    PA_STREAM_NODIRECTION = 0
+    PA_STREAM_PLAYBACK = 1
+    PA_STREAM_RECORD = 2
+    PA_STREAM_UPLOAD = 3
+
+
+class SampleFormat(Enum):
+    # TODO: Remove prefixes
+    PA_SAMPLE_U8 = 0
+    PA_SAMPLE_S16LE = 3
+
+
+class PulseAudioErrorException(Exception):
+    def __init__(self, error_message, error_code):
+        self.error_message = error_message
+        self.pulse_error_code = error_code
+        self.pulse_error_string = libpulse_simple.pa_strerror(error_code).decode('ascii')
+
+    def __str__(self):
+        return '{0} ({1}, Code: {2})'.format(self.error_message, self.pulse_error_string, self.pulse_error_code)
+
+
+class SimpleClient:
+    pa_stream_direction = StreamDirection.PA_STREAM_NODIRECTION
+
+    # TODO: source should be moved to SimpleRecordClient
+    # TODO: SimplePlaybackClient should receive a sink property
+    def __init__(self, sample_frequency=44100, sample_format=SampleFormat.PA_SAMPLE_U8, source=None):
+        self.sample_frequency = sample_frequency
+        self.sample_format = sample_format
+        self.source = source
+        self.client = None # TODO
+
+    def __enter__(self):
+        error = ctypes.c_int(0)
+        self.client = libpulse_simple.pa_simple_new(None,
+                                                    b'pulseviz.py',
+                                                    self.pa_stream_direction.value,
+                                                    self.source,
+                                                    b'pulseviz.py',
+                                                    SampleSpec(self.sample_format.value, self.sample_frequency, 1),
+                                                    None,
+                                                    None,
+                                                    error)
+        if self.client is None or self.client == 0:
+            raise PulseAudioErrorException('Could not create PulseAudio stream.', error.value)
+
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # TODO: Is this really called even when an exception occurs while in __enter__?
+        if self.client is not None and self.client != 0:
+            libpulse_simple.pa_simple_free(self.client)
+
+    def get_latency(self):
+        error = ctypes.c_int(0)
+        latency = libpulse_simple.pa_simple_get_latency(self.client, ctypes.byref(error))
+        if latency == -1:
+            raise PulseAudioErrorException('Could not determine latency.', error.value)
+        return latency
+
+
+class SimpleRecordClient(SimpleClient):
+    pa_stream_direction = StreamDirection.PA_STREAM_RECORD
+
+    def read(self, size=1024):
+        data = (ctypes.c_uint8 * size)()
+        error = ctypes.c_int(0)
+
+        result = libpulse_simple.pa_simple_read(self.client, data, size, error)
+        if result < 0:
+            raise PulseAudioErrorException('Could not read data.', error.value)
+
+        # TODO: I guess, using list is quite slow in this case?
+        return list(data)
+
+    def read_samples(self, size=1024):
+        """
+        Wrapper around the read() function that respects the chosen SampleFormat and automatically
+        decodes the chunk data.
+        """
+
+        if self.sample_format == SampleFormat.PA_SAMPLE_U8:
+            data = self.read(size=size)
+            decoded_data = data
+            dequantized_data = [x/128.0-1.0 for x in decoded_data]
+        else:
+            raise Exception('The selected sample format is not supported by read_data().')
+
+        return dequantized_data
+
+
+class SimplePlaybackClient(SimpleClient):
+    pa_stream_direction = StreamDirection.PA_STREAM_PLAYBACK
+
+    def write(self, data):
+        size = len(data)
+        c_data = (ctypes.c_uint8 * size)(*data)
+        error = ctypes.c_int(0)
+
+        result = libpulse_simple.pa_simple_write(self.client, c_data, size, error)
+        if result < 0:
+            raise PulseAudioErrorException('Could not write data.', error.value)
+
+    def drain(self):
+        error = ctypes.c_int(0)
+
+        result = libpulse_simple.pa_simple_drain(self.client, error)
+        if result < 0:
+            raise PulseAudioErrorException('Could not drain data.', error.value)
+
+
+# Attempt to load libpulse-simple
+try:
+    libpulse_simple = ctypes.cdll.LoadLibrary('libpulse-simple.so.0')
+except OSError as e:
+    raise ImportError(str(e))
+
+# pa_strerror()
+libpulse_simple.pa_strerror.restype = ctypes.c_char_p
+
+# pa_simple_new()
+libpulse_simple.pa_simple_new.argtypes = [
+    ctypes.c_char_p,
+    ctypes.c_char_p,
+    # StreamDirection
+    ctypes.c_uint32,
+    ctypes.c_char_p,
+    ctypes.c_char_p,
+    ctypes.POINTER(SampleSpec),
+    ctypes.POINTER(ChannelMap),
+    ctypes.POINTER(BufferAttributes),
+    ctypes.POINTER(ctypes.c_int)
+]
+libpulse_simple.pa_simple_new.restype = ctypes.c_void_p
+
+# pa_simple_free()
+libpulse_simple.pa_simple_free.argtypes = [
+    ctypes.c_void_p
+]
+
+# pa_simple_get_latency()
+libpulse_simple.pa_simple_read.argtypes = [
+    ctypes.c_void_p
+]
+
+# pa_simple_read()
+libpulse_simple.pa_simple_read.argtypes = [
+    ctypes.c_void_p, # TODO: pa_simple struct,
+    ctypes.POINTER(ctypes.c_uint8),
+    ctypes.c_size_t,
+    ctypes.POINTER(ctypes.c_int)
+]
+
+# pa_simple_write()
+libpulse_simple.pa_simple_write.argtypes = [
+    ctypes.c_void_p, # TODO: pa_simple struct,
+    ctypes.POINTER(ctypes.c_uint8),
+    ctypes.c_size_t,
+    ctypes.POINTER(ctypes.c_int)
+]
+
+# pa_simple_drain()
+libpulse_simple.pa_simple_drain.argtypes = [
+    ctypes.c_void_p, # TODO: pa_simple struct,
+    ctypes.POINTER(ctypes.c_int)
+]
