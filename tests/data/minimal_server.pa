@@ -1,0 +1,8 @@
+#!/usr/bin/pulseaudio -nF
+
+.fail
+load-module module-native-protocol-unix auth-anonymous=1
+load-module module-native-protocol-tcp auth-ip-acl=127.0.0.0/8;172.0.0.0/8 auth-anonymous=1
+# load-module module-null-sink sink_name=null
+# set-default-sink null
+
