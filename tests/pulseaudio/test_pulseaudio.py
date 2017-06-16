@@ -1,23 +1,10 @@
 import pytest
-import importlib
+import os
 import subprocess
+import re
 
 
-@pytest.fixture(scope='session')
-def fixture_pulseaudio_library():
-    """
-    Tries to load the pulseaudio package which depends on libpulse and libpulse-simple
-    being installed on the system.
-    """
-
-    import pulseaudio
-    import pulseaudio.simple_client
-    importlib.reload(pulseaudio)
-    importlib.reload(pulseaudio.simple_client)
-    return pulseaudio
-
-
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='session', autouse=True)
 def fixture_pulseaudio_server():
     """
     Makes sure that a PulseAudio server is running.
@@ -26,12 +13,16 @@ def fixture_pulseaudio_server():
     at the end of the test.
     """
 
+    # TODO: Try --start parameter
+    # TODO: Try using --daemonize
+    # TODO: Pipe log to file and save as artifact in GitLab
+
     process = subprocess.Popen(['pulseaudio',
                                 '--daemonize=no',
                                 '-n',
                                 '-F', 'tests/data/minimal_server.pa',
                                 '--exit-idle-time', '1337',
-                                '-v'],
+                                '-vvvv'],
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
 
@@ -54,11 +45,42 @@ def fixture_pulseaudio_server():
             raise Exception('Cannot start PulseAudio server.')
 
 
-@pytest.mark.skip(reason='Does not work right now.')
-def test_import_pulseaudio_library(fixture_pulseaudio_library):
-    pass
+# TODO: Use function scope instead and create a unique null sink
+# by appending the test name to it.
+@pytest.fixture(scope='session', autouse=True)
+def fixture_null_sink(fixture_pulseaudio_server):
+    """
+    Ensures that there is a null sink and monitor source available.
+    """
+
+    sink_name = 'null'
+    subprocess.run(['pacmd', 'unload-module', 'module-null-sink'])
+    process = subprocess.run(['pacmd', 'load-module', 'module-null-sink', 'sink_name="{0}"'.format(sink_name)])
+    assert process.returncode == 0
+    yield sink_name, sink_name + '.monitor'
+    subprocess.run(['pacmd', 'unload-module', 'module-null-sink'])
 
 
 def test_start_pulseaudio_server(fixture_pulseaudio_server):
-    pass
+    process = subprocess.run(['pulseaudio', '--check'])
+    assert process.returncode == 0
 
+
+def test_create_null_sink(fixture_null_sink):
+    sink_name, source_name = fixture_null_sink
+
+    process = subprocess.run(['pacmd', 'list-sinks'], stdout=subprocess.PIPE)
+    for line in process.stdout.splitlines(keepends=False):
+        line = line.decode('ascii')
+        if re.match('^[\t]name: <{0}>$'.format(sink_name), line):
+            break
+    else:
+        pytest.fail('Cannot find "{0}" sink.'.format(sink_name))
+
+    process = subprocess.run(['pacmd', 'list-sources'], stdout=subprocess.PIPE)
+    for line in process.stdout.splitlines(keepends=False):
+        line = line.decode('ascii')
+        if re.match('^[\t]name: <{0}>$'.format(source_name), line):
+            break
+    else:
+        pytest.fail('Cannot find "{0}" source.'.format(source_name))
