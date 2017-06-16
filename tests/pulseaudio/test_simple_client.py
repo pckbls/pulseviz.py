@@ -3,6 +3,8 @@ import threading
 import queue
 import time
 import random
+from pulseviz.pulseaudio import simple_client
+from .test_pulseaudio import fixture_pulseaudio_server, fixture_null_sink
 
 
 # TODO: Test different sample rates
@@ -10,57 +12,44 @@ import random
 
 
 @pytest.fixture()
-def pulseaudio_fixture():
-    # TODO: Load module-null-sink and create a new sink for testing purposes
-    from pulseviz.pulseaudio import simple_client
-    #importlib.reload(pulseaudio) # TODO: Remove?
-    return simple_client
+def simple_client_fixture(fixture_pulseaudio_server, request):
+    return simple_client.SimpleClient(name='pulseviz-tests', stream_name=request.function.__name__)
 
 
 @pytest.fixture()
-def simple_client_fixture(pulseaudio_fixture):
-    # TODO: Use null sink
-    pulseaudio = pulseaudio_fixture
-    return pulseaudio, pulseaudio.SimpleClient()
+def simple_record_client_fixture(fixture_null_sink, request):
+    _, source_name = fixture_null_sink
+    return simple_client.SimpleRecordClient(source=source_name, name='pulseviz-tests', stream_name=request.function.__name__)
 
 
 @pytest.fixture()
-def simple_record_client_fixture(pulseaudio_fixture):
-    # TODO: Use null sink
-    pulseaudio = pulseaudio_fixture
-    return pulseaudio, pulseaudio.SimpleRecordClient()
+def simple_playback_client_fixture(fixture_null_sink, request):
+    sink_name, _ = fixture_null_sink
+    return simple_client.SimplePlaybackClient(sink=sink_name, name='pulseviz-tests', stream_name=request.function.__name__)
 
 
-@pytest.fixture()
-def simple_playback_client_fixture(pulseaudio_fixture):
-    # TODO: Use null sink
-    pulseaudio = pulseaudio_fixture
-    return pulseaudio, pulseaudio.SimplePlaybackClient()
-
-
-# TODO: Use @pytest.mark.xfail decorator
+@pytest.mark.xfail(raises=simple_client.SimpleClientErrorException)
 def test_simple_client_failure(simple_client_fixture):
-    pulseaudio, simple_client = simple_client_fixture
-    with pytest.raises(pulseaudio.PulseAudioErrorException):
-        with simple_client:
-            pass
+    c = simple_client_fixture
+    with c:
+        pass
 
 
 def test_simple_record_client_enter_exit(simple_record_client_fixture):
-    pulseaudio, c = simple_record_client_fixture
+    c = simple_record_client_fixture
     with c:
         pass
 
 
 def test_simple_record_client_get_latency(simple_record_client_fixture):
-    pulseaudio, c = simple_record_client_fixture
+    c = simple_record_client_fixture
     with c:
         latency = c.get_latency()
         assert latency > 0
 
 
 def test_simple_record_client_read(simple_record_client_fixture):
-    pulseaudio, c = simple_record_client_fixture
+    c = simple_record_client_fixture
     with c:
         for size in [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]:
             data = c.read(size=size)
@@ -69,7 +58,7 @@ def test_simple_record_client_read(simple_record_client_fixture):
 
 
 def test_simple_playback_client_write(simple_playback_client_fixture):
-    pulseaudio, c = simple_playback_client_fixture
+    c = simple_playback_client_fixture
     with c:
         # TODO: 1 and 2 do not work.
         for size in [4, 8, 16, 32, 64, 128, 256, 512, 1024]:
@@ -79,14 +68,12 @@ def test_simple_playback_client_write(simple_playback_client_fixture):
 
 
 @pytest.mark.skip(reason='Too slow.')
-def test_read_write(pulseaudio_fixture):
-    pulseaudio = pulseaudio_fixture
-
+def test_read_write(fixture_pulseaudio_server):
     def playback_task():
         # TODO: Use Barrier object to wait for record_task to
         # start recording
 
-        c = pulseaudio.SimplePlaybackClient(source=b'null', sample_frequency=16)
+        c = simple_client.SimplePlaybackClient(source=b'null', sample_frequency=16)
         with c:
             start_ts = time.time()
             while time.time() - start_ts < 5.0:
@@ -95,7 +82,7 @@ def test_read_write(pulseaudio_fixture):
                 c.drain()
 
     def record_task(result):
-        c = pulseaudio.SimpleRecordClient(source=b'null.monitor', sample_frequency=16)
+        c = simple_client.SimpleRecordClient(source=b'null.monitor', sample_frequency=16)
         with c:
             start_ts = time.time()
             while time.time() - start_ts < 5.0:

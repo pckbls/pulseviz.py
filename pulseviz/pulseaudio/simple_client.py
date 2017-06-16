@@ -2,6 +2,9 @@ import ctypes
 from enum import Enum
 
 
+# TODO: Improve Enum type
+
+
 class SampleSpec(ctypes.Structure):
     _fields_ = [
         # SampleFormat
@@ -20,7 +23,6 @@ class BufferAttributes(ctypes.Structure):
 
 
 class StreamDirection(Enum):
-    # TODO: Remove prefixes
     PA_STREAM_NODIRECTION = 0
     PA_STREAM_PLAYBACK = 1
     PA_STREAM_RECORD = 2
@@ -28,13 +30,13 @@ class StreamDirection(Enum):
 
 
 class SampleFormat(Enum):
-    # TODO: Remove prefixes
     PA_SAMPLE_U8 = 0
     PA_SAMPLE_S16LE = 3
 
 
-class PulseAudioErrorException(Exception):
+class SimpleClientErrorException(Exception):
     def __init__(self, error_message, error_code):
+        super(SimpleClientErrorException, self).__init__()
         self.error_message = error_message
         self.pulse_error_code = error_code
         self.pulse_error_string = libpulse_simple.pa_strerror(error_code).decode('ascii')
@@ -46,27 +48,27 @@ class PulseAudioErrorException(Exception):
 class SimpleClient:
     pa_stream_direction = StreamDirection.PA_STREAM_NODIRECTION
 
-    # TODO: source should be moved to SimpleRecordClient
-    # TODO: SimplePlaybackClient should receive a sink property
-    def __init__(self, sample_frequency=44100, sample_format=SampleFormat.PA_SAMPLE_U8, source=None):
+    def __init__(self, sample_frequency=44100, sample_format=SampleFormat.PA_SAMPLE_U8, name='pulseviz.py', stream_name='none'):
         self.sample_frequency = sample_frequency
         self.sample_format = sample_format
-        self.source = source
-        self.client = None # TODO
+        self.sink_source_name = None
+        self.client = None
+        self.name = name.encode('ascii')
+        self.stream_name = stream_name.encode('ascii')
 
     def __enter__(self):
         error = ctypes.c_int(0)
         self.client = libpulse_simple.pa_simple_new(None,
-                                                    b'pulseviz.py',
+                                                    self.name,
                                                     self.pa_stream_direction.value,
-                                                    self.source,
-                                                    b'pulseviz.py',
+                                                    self.sink_source_name,
+                                                    self.stream_name,
                                                     SampleSpec(self.sample_format.value, self.sample_frequency, 1),
                                                     None,
                                                     None,
                                                     error)
         if self.client is None or self.client == 0:
-            raise PulseAudioErrorException('Could not create PulseAudio stream.', error.value)
+            raise SimpleClientErrorException('Could not create PulseAudio stream.', error.value)
 
         return self
 
@@ -79,12 +81,17 @@ class SimpleClient:
         error = ctypes.c_int(0)
         latency = libpulse_simple.pa_simple_get_latency(self.client, ctypes.byref(error))
         if latency == -1:
-            raise PulseAudioErrorException('Could not determine latency.', error.value)
+            raise SimpleClientErrorException('Could not determine latency.', error.value)
         return latency
 
 
 class SimpleRecordClient(SimpleClient):
     pa_stream_direction = StreamDirection.PA_STREAM_RECORD
+
+    def __init__(self, source=None, **kwargs):
+        kwargs['stream_name'] = kwargs.get('stream_name', 'record')
+        super(SimpleRecordClient, self).__init__(**kwargs)
+        self.sink_source_name = source.encode('ascii') if source is not None else source
 
     def read(self, size=1024):
         data = (ctypes.c_uint8 * size)()
@@ -92,7 +99,7 @@ class SimpleRecordClient(SimpleClient):
 
         result = libpulse_simple.pa_simple_read(self.client, data, size, error)
         if result < 0:
-            raise PulseAudioErrorException('Could not read data.', error.value)
+            raise SimpleClientErrorException('Could not read data.', error.value)
 
         # TODO: I guess, using list is quite slow in this case?
         return list(data)
@@ -116,6 +123,11 @@ class SimpleRecordClient(SimpleClient):
 class SimplePlaybackClient(SimpleClient):
     pa_stream_direction = StreamDirection.PA_STREAM_PLAYBACK
 
+    def __init__(self, sink=None, **kwargs):
+        kwargs['stream_name'] = kwargs.get('stream_name', 'playback')
+        super(SimplePlaybackClient, self).__init__(**kwargs)
+        self.sink_source_name = sink.encode('ascii') if sink is not None else sink
+
     def write(self, data):
         size = len(data)
         c_data = (ctypes.c_uint8 * size)(*data)
@@ -123,14 +135,14 @@ class SimplePlaybackClient(SimpleClient):
 
         result = libpulse_simple.pa_simple_write(self.client, c_data, size, error)
         if result < 0:
-            raise PulseAudioErrorException('Could not write data.', error.value)
+            raise SimpleClientErrorException('Could not write data.', error.value)
 
     def drain(self):
         error = ctypes.c_int(0)
 
         result = libpulse_simple.pa_simple_drain(self.client, error)
         if result < 0:
-            raise PulseAudioErrorException('Could not drain data.', error.value)
+            raise SimpleClientErrorException('Could not drain data.', error.value)
 
 
 # Attempt to load libpulse-simple
