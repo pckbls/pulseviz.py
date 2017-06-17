@@ -1,7 +1,7 @@
 before_script:
   - apt-get update -qy
   - apt-get install -y pulseaudio
-  - pip3 install -r requirements-test.txt
+  - pip3 install -r requirements.txt -r requirements-test.txt
 
 # test3.4:
 #   image: python:3.4
