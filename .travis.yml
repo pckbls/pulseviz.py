@@ -9,4 +9,6 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq -y pulseaudio
 install: "pip install -r requirements.txt -r requirements-test.txt"
+notifications:
+  email: false
 
