@@ -16,7 +16,7 @@ class SpectrumAnalayzer(Sampler):
 
     def fft(self):
         fft = numpy.fft.rfft(self.samples)
-        fftfreq = numpy.fft.rfftfreq(self.sample_size, self._pulseaudio_client.sample_frequency)
+        fftfreq = numpy.fft.rfftfreq(self.sample_size, 1.0 / self._pulseaudio_client.sample_frequency)
         with self.fft_left_side_lock:
             self.fft_left_side = numpy.abs(fft)
             self.fftfreq_left_side = fftfreq
