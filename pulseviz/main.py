@@ -15,7 +15,7 @@ def print_help():
         print('    {0}'.format(source))
 
     print('\nAvailable visualizers:')
-    for visualizer in ['waveform', 'spectrum']:
+    for visualizer in ['waveform', 'spectrum', 'bands']:
         print('    {0}'.format(visualizer))
     
     sys.exit(1)
@@ -36,6 +36,9 @@ def main():
     elif visualizer_name == 'spectrum':
         from .visualizer.spectrum import SpectrumVisualizer
         visualizer_type = SpectrumVisualizer
+    elif visualizer_name == 'bands':
+        from .visualizer.bands import BandsVisualizer
+        visualizer_type = BandsVisualizer
     else:
         print_help()
     
