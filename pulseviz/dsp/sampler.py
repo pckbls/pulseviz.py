@@ -17,12 +17,12 @@ class Sampler(threading.Thread):
     def run(self):
         with self._pulseaudio_client:
             while not self._stop_event.is_set():
-                self.sample()
+                self._sample()
 
     def stop(self):
         self._stop_event.set()
 
-    def sample(self):
+    def _sample(self):
         samples = self._pulseaudio_client.read_samples(size=self.sample_size)
         with self.samples_lock:
             self.samples = numpy.array(samples, dtype='f')

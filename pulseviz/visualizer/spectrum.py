@@ -7,7 +7,7 @@ from OpenGL.GLUT import *
 
 from . import Visualizer
 from ..opengl_window import OpenGLWindow2D
-from ..dsp.spectrum_analyzer import SpectrumAnalayzer
+from ..dsp.fft import FFTAnalyzer
 
 
 class SpectrumVisualizer(Visualizer):
@@ -15,8 +15,8 @@ class SpectrumVisualizer(Visualizer):
 
     def __init__(self, sample_size, pulseaudio_client, **kwargs):
         OpenGLWindow2D.__init__(self, **kwargs)  # TODO
-        self.analyzer = SpectrumAnalayzer(sample_size=sample_size,
-                                          pulseaudio_client=pulseaudio_client)
+        self.analyzer = FFTAnalyzer(sample_size=sample_size,
+                                    pulseaudio_client=pulseaudio_client)
         self.auto_scale = True
         self.max_observed_y = None
 
@@ -31,27 +31,27 @@ class SpectrumVisualizer(Visualizer):
         self.y_axis_min = min_y
         self.y_axis_max = max_x
 
-    def resize(self, width, height):
-        super(SpectrumVisualizer, self).resize(width, height)
+    def _resize(self, width, height):
+        super(SpectrumVisualizer, self)._resize(width, height)
 
         if self.x_axis_mode == 'lin':
-            self.x_coordinates = np.linspace(0, self.width, len(self.analyzer.fft_left_side))
+            self.x_coordinates = np.linspace(0, self.width, len(self.analyzer.fft))
         elif self.x_axis_mode == 'log':
             self.x_coordinates = (self.width+1) \
                     - np.logspace(np.log2(self.width+1),
                                   0,
-                                  len(self.analyzer.fft_left_side),
+                                  len(self.analyzer.fft),
                                   base=2)
         else:
             raise Exception('Unknown option: {0}'.format(self.x_axis_mode))
 
-    def display(self):
-        with self.analyzer.fft_left_side_lock:
+    def _display(self):
+        with self.analyzer.fft_lock:
             if self.y_axis_mode == 'lin':
-                y_coordinates = self.analyzer.fft_left_side
+                y_coordinates = self.analyzer.fft
             elif self.y_axis_mode == 'log':
                 # TODO: Fix division-by-zero RuntimeWarnings.
-                y_coordinates = 20 * np.log10(self.analyzer.fft_left_side)
+                y_coordinates = 20 * np.log10(self.analyzer.fft)
             else:
                 raise Exception('Unknown option: {0}'.format(self.x_axis_mode))
 

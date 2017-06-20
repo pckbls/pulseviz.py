@@ -7,7 +7,7 @@ from OpenGL.GLUT import *
 
 from . import Visualizer
 from ..opengl_window import OpenGLWindow2D
-from ..dsp.spectrum_bands_analyzer import SpectrumBandsAnalayzer
+from ..dsp.fft_bands import FFTBandsAnalayzer
 
 
 class BandsVisualizer(Visualizer):
@@ -15,8 +15,20 @@ class BandsVisualizer(Visualizer):
 
     def __init__(self, sample_size, pulseaudio_client, **kwargs):
         OpenGLWindow2D.__init__(self, **kwargs)  # TODO
-        self.analyzer = SpectrumBandsAnalayzer(sample_size=sample_size,
-                                               pulseaudio_client=pulseaudio_client)
+        self.analyzer = FFTBandsAnalayzer(sample_size=sample_size,
+                                          pulseaudio_client=pulseaudio_client)
+        self.analyzer.set_frequency_bands([
+            (0, 50),
+            (50, 100),
+            (100, 200),
+            (200, 400),
+            (400, 800),
+            (800, 1600),
+            (1600, 3200),
+            (3200, 6400),
+            (6400, 12800),
+            (12800, 22050)
+        ])
         
         self.frequency_bins = 10
         self.bin_spacing = 5.0
@@ -33,11 +45,11 @@ class BandsVisualizer(Visualizer):
         self.y_axis_min = min
         self.y_axis_max = max
 
-    def display(self):
+    def _display(self):
         bin_width = (self.width - (self.frequency_bins - 1) * self.bin_spacing) / self.frequency_bins
 
-        with self.analyzer.bands_lock:
-            self.bin_heights = self.analyzer.frequency_bins_values
+        with self.analyzer.fft_bands_lock:
+            self.bin_heights = self.analyzer.fft_bands
 
             if self.y_axis_mode == 'lin':
                 self.bin_heights = np.array(self.bin_heights)

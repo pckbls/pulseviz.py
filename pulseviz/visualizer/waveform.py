@@ -17,7 +17,7 @@ class WaveformVisualizer(Visualizer):
         OpenGLWindow2D.__init__(self, **kwargs)  # TODO
         self.analyzer = Sampler(sample_size=sample_size, pulseaudio_client=pulseaudio_client)
 
-    def display(self):
+    def _display(self):
         with self.analyzer.samples_lock:
             bin_width = self.width / self.analyzer.sample_size
 
