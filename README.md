@@ -33,6 +33,10 @@ pulseviz requires you to choose from an audio source and a visualizer type:
 By default PulseAudio automatically creates a monitor source for each sink which can be used to visualize the audio that you are hearing.
 Those sources have a `.monitor` suffix.
 
+# Known issues
+
+* For some applications (e.g. Spotify) the visualizations appear to be really slow and laggy. As a (temporary) workaround this can be solved by opening `pavucontrol` alongside pulseviz.
+
 # Future goals
 
 * Make visualizers configurable
