@@ -1,5 +1,5 @@
-import numpy
 import threading
+import numpy
 from .sampler import Sampler
 
 

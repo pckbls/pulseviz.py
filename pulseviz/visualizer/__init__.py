@@ -4,7 +4,7 @@ from ..opengl_window import OpenGLWindow2D
 class Visualizer(OpenGLWindow2D):
     window_name = 'pulseviz'
 
-    def __init__(self, pulseaudio_client, **kwargs):
+    def __init__(self, **kwargs):
         super(Visualizer, self).__init__(**kwargs)
         self.analyzer = None
 
