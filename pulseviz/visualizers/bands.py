@@ -5,7 +5,8 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-from . import Visualizer, visualizer
+from . import visualizer
+from ..visualizer import Visualizer
 from ..opengl_window import OpenGLWindow2D
 from ..dsp.fft_bands import FFTBandsAnalayzer
 
