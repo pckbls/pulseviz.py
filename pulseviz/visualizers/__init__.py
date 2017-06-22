@@ -1,9 +1,9 @@
-visualizers = {}
+registry = {}
 
 
 def visualizer(name):
     def _wrap(cls):
-        visualizers[name] = cls
+        registry[name] = cls
         return cls
     return _wrap
 

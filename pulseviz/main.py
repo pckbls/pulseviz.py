@@ -1,7 +1,7 @@
 import sys
 from .pulseaudio.simple_client import SimpleRecordClient
 from .pulseaudio import pacmd
-from .visualizers import visualizers
+from . import visualizers
 
 
 REFRESH_RATE = 10.0
@@ -16,7 +16,7 @@ def print_help():
         print('    {0}'.format(source))
 
     print('\nAvailable visualizers:')
-    for visualizer in visualizers.keys():
+    for visualizer in visualizers.registry.keys():
         print('    {0}'.format(visualizer))
 
     sys.exit(1)
@@ -31,7 +31,7 @@ def main():
         print_help()
 
     visualizer_name = sys.argv[2]
-    visualizer_type = visualizers.get(visualizer_name)
+    visualizer_type = visualizers.registry.get(visualizer_name)
     if visualizer_type is None:
         print_help()
 
