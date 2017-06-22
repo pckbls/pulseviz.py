@@ -11,9 +11,9 @@ before_script:
 test3.5:
   image: python:3.5
   script:
-    - py.test -v -s
+    - py.test -v -s -m "not visualizer"
 
 test3.6:
   image: python:3.6
   script:
-    - py.test -v -s
+    - py.test -v -s -m "not visualizer"

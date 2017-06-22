@@ -4,7 +4,7 @@ python:
   - "3.6"
 dist: trusty
 sudo: required
-script: pytest -v -s
+script: pytest -v -s -m "not visualizer"
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq -y pulseaudio
