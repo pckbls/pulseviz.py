@@ -1,31 +1,13 @@
-import pytest
 import threading
 import queue
 import time
 import random
+import pytest
 from pulseviz.pulseaudio import simple_client
-from .test_pulseaudio import fixture_pulseaudio_server, fixture_null_sink
 
 
 # TODO: Test different sample rates
 # TODO: Test different channel settings (mono, stereo)
-
-
-@pytest.fixture()
-def simple_client_fixture(fixture_pulseaudio_server, request):
-    return simple_client.SimpleClient(name='pulseviz-tests', stream_name=request.function.__name__)
-
-
-@pytest.fixture()
-def simple_record_client_fixture(fixture_null_sink, request):
-    _, source_name = fixture_null_sink
-    return simple_client.SimpleRecordClient(source=source_name, name='pulseviz-tests', stream_name=request.function.__name__)
-
-
-@pytest.fixture()
-def simple_playback_client_fixture(fixture_null_sink, request):
-    sink_name, _ = fixture_null_sink
-    return simple_client.SimplePlaybackClient(sink=sink_name, name='pulseviz-tests', stream_name=request.function.__name__)
 
 
 @pytest.mark.xfail(raises=simple_client.SimpleClientErrorException)
@@ -103,4 +85,3 @@ def test_read_write(fixture_pulseaudio_server):
     playback.join()
 
     assert q.get()
-
