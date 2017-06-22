@@ -1,6 +1,7 @@
 import sys
 from .pulseaudio.simple_client import SimpleRecordClient
 from .pulseaudio import pacmd
+from .visualizer import visualizers
 
 
 REFRESH_RATE = 10.0
@@ -15,7 +16,7 @@ def print_help():
         print('    {0}'.format(source))
 
     print('\nAvailable visualizers:')
-    for visualizer in ['waveform', 'spectrum', 'bands']:
+    for visualizer in visualizers.keys():
         print('    {0}'.format(visualizer))
 
     sys.exit(1)
@@ -30,16 +31,8 @@ def main():
         print_help()
 
     visualizer_name = sys.argv[2]
-    if visualizer_name == 'waveform':
-        from .visualizer.waveform import WaveformVisualizer
-        visualizer_type = WaveformVisualizer
-    elif visualizer_name == 'spectrum':
-        from .visualizer.spectrum import SpectrumVisualizer
-        visualizer_type = SpectrumVisualizer
-    elif visualizer_name == 'bands':
-        from .visualizer.bands import BandsVisualizer
-        visualizer_type = BandsVisualizer
-    else:
+    visualizer_type = visualizers.get(visualizer_name)
+    if visualizer_type is None:
         print_help()
 
     client = SimpleRecordClient(source=source)

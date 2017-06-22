@@ -5,11 +5,12 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-from . import Visualizer
+from . import Visualizer, visualizer
 from ..opengl_window import OpenGLWindow2D
 from ..dsp.sampler import Sampler
 
 
+@visualizer(name='waveform')
 class WaveformVisualizer(Visualizer):
     window_name = 'waveform - pulseviz'
 

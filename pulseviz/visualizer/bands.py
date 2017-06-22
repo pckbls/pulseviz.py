@@ -5,11 +5,12 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
 
-from . import Visualizer
+from . import Visualizer, visualizer
 from ..opengl_window import OpenGLWindow2D
 from ..dsp.fft_bands import FFTBandsAnalayzer
 
 
+@visualizer(name='bands')
 class BandsVisualizer(Visualizer):
     window_name = 'frequency bands - pulseviz'
 

@@ -1,6 +1,16 @@
 from ..opengl_window import OpenGLWindow2D
 
 
+visualizers = {}
+
+
+def visualizer(name):
+    def _wrap(cls):
+        visualizers[name] = cls
+        return cls
+    return _wrap
+
+
 class Visualizer(OpenGLWindow2D):
     window_name = 'pulseviz'
 
@@ -16,3 +26,7 @@ class Visualizer(OpenGLWindow2D):
         super(Visualizer, self).quit()
         self.analyzer.stop()
         self.analyzer.join()
+
+
+# TODO: Is there any way to remove this?
+from . import waveform, spectrum, bands
