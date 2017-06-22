@@ -19,7 +19,13 @@ class ChannelMap(ctypes.Structure):
 
 
 class BufferAttributes(ctypes.Structure):
-    pass
+    _fields_ = [
+        ('maxlength', ctypes.c_uint32),
+        ('tlength', ctypes.c_uint32),
+        ('prebuf', ctypes.c_uint32),
+        ('minreq', ctypes.c_uint32),
+        ('fragsize', ctypes.c_uint32)
+    ]
 
 
 class StreamDirection(Enum):
@@ -55,24 +61,25 @@ class SimpleClient:
                  sample_format=SampleFormat.PA_SAMPLE_U8,
                  name='pulseviz.py',
                  stream_name='none'):
-        self.sample_frequency = sample_frequency
-        self.sample_format = sample_format
         self.sink_source_name = None
         self.client = None
         self.name = name.encode('ascii')
         self.stream_name = stream_name.encode('ascii')
+        self.sample_frequency = sample_frequency
+        self.sample_format = sample_format
+        self.sample_spec = SampleSpec(self.sample_format.value, self.sample_frequency, 1)
+        self.buffer_attributes = None
 
     def __enter__(self):
         error = ctypes.c_int(0)
-        sample_spec = SampleSpec(self.sample_format.value, self.sample_frequency, 1)
         self.client = libpulse_simple.pa_simple_new(None,
                                                     self.name,
                                                     self.pa_stream_direction.value,
                                                     self.sink_source_name,
                                                     self.stream_name,
-                                                    sample_spec,
+                                                    self.sample_spec,
                                                     None,
-                                                    None,
+                                                    self.buffer_attributes,
                                                     error)
         if self.client is None or self.client == 0:
             raise SimpleClientErrorException('Could not create PulseAudio stream.', error.value)
@@ -95,10 +102,17 @@ class SimpleClient:
 class SimpleRecordClient(SimpleClient):
     pa_stream_direction = StreamDirection.PA_STREAM_RECORD
 
-    def __init__(self, source=None, **kwargs):
+    def __init__(self, source=None, target_latency=100000, **kwargs):
         kwargs['stream_name'] = kwargs.get('stream_name', 'record')
         super(SimpleRecordClient, self).__init__(**kwargs)
         self.sink_source_name = source.encode('ascii') if source is not None else source
+
+        fragsize = libpulse_simple.pa_usec_to_bytes(target_latency, self.sample_spec)
+        self.buffer_attributes = BufferAttributes(maxlength=-1,
+                                                  tlength=-1,
+                                                  prebuf=-1,
+                                                  minreq=-1,
+                                                  fragsize=fragsize)
 
     def read(self, size=1024):
         data = (ctypes.c_uint8 * size)()
