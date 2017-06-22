@@ -42,13 +42,19 @@ class SimpleClientErrorException(Exception):
         self.pulse_error_string = libpulse_simple.pa_strerror(error_code).decode('ascii')
 
     def __str__(self):
-        return '{0} ({1}, Code: {2})'.format(self.error_message, self.pulse_error_string, self.pulse_error_code)
+        return '{0} ({1}, Code: {2})'.format(self.error_message,
+                                             self.pulse_error_string,
+                                             self.pulse_error_code)
 
 
 class SimpleClient:
     pa_stream_direction = StreamDirection.PA_STREAM_NODIRECTION
 
-    def __init__(self, sample_frequency=44100, sample_format=SampleFormat.PA_SAMPLE_U8, name='pulseviz.py', stream_name='none'):
+    def __init__(self,
+                 sample_frequency=44100,
+                 sample_format=SampleFormat.PA_SAMPLE_U8,
+                 name='pulseviz.py',
+                 stream_name='none'):
         self.sample_frequency = sample_frequency
         self.sample_format = sample_format
         self.sink_source_name = None
@@ -58,12 +64,13 @@ class SimpleClient:
 
     def __enter__(self):
         error = ctypes.c_int(0)
+        sample_spec = SampleSpec(self.sample_format.value, self.sample_frequency, 1)
         self.client = libpulse_simple.pa_simple_new(None,
                                                     self.name,
                                                     self.pa_stream_direction.value,
                                                     self.sink_source_name,
                                                     self.stream_name,
-                                                    SampleSpec(self.sample_format.value, self.sample_frequency, 1),
+                                                    sample_spec,
                                                     None,
                                                     None,
                                                     error)
