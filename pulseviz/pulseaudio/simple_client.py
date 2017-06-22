@@ -207,3 +207,10 @@ libpulse_simple.pa_simple_drain.argtypes = [
     ctypes.c_void_p, # TODO: pa_simple struct,
     ctypes.POINTER(ctypes.c_int)
 ]
+
+# pa_usec_to_bytes()
+libpulse_simple.pa_usec_to_bytes.argtypes = [
+    ctypes.c_uint64, # pa_usec_t
+    ctypes.POINTER(SampleSpec)
+]
+libpulse_simple.pa_usec_to_bytes.restype = ctypes.c_size_t
