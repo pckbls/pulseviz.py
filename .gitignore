@@ -108,3 +108,5 @@ ENV/
 # pytest-profiling output
 prof/
 
+# Unsorted directory for some stuff
+unsorted/
