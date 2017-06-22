@@ -1,7 +1,7 @@
 import sys
 from .pulseaudio.simple_client import SimpleRecordClient
 from .pulseaudio import pacmd
-from .visualizer import visualizers
+from .visualizers import visualizers
 
 
 REFRESH_RATE = 10.0
