@@ -196,9 +196,10 @@ libpulse_simple.pa_simple_free.argtypes = [
 ]
 
 # pa_simple_get_latency()
-libpulse_simple.pa_simple_read.argtypes = [
+libpulse_simple.pa_simple_get_latency.argtypes = [
     ctypes.c_void_p
 ]
+libpulse_simple.pa_simple_get_latency.restype = ctypes.c_uint64 # pa_usec_t
 
 # pa_simple_read()
 libpulse_simple.pa_simple_read.argtypes = [
