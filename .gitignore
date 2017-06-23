@@ -110,3 +110,7 @@ prof/
 
 # Unsorted directory for some stuff
 unsorted/
+
+# ctags
+tags
+
