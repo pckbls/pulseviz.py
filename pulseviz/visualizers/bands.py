@@ -16,7 +16,7 @@ class BandsVisualizer(Visualizer):
     window_name = 'frequency bands - pulseviz'
 
     def __init__(self, sample_size, pulseaudio_client, **kwargs):
-        OpenGLWindow2D.__init__(self, **kwargs)  # TODO
+        super(BandsVisualizer, self).__init__(**kwargs)
         self.analyzer = FFTBandsAnalayzer(sample_size=sample_size,
                                           pulseaudio_client=pulseaudio_client)
         self.analyzer.set_frequency_bands([

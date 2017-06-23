@@ -16,7 +16,7 @@ class SpectrumVisualizer(Visualizer):
     window_name = 'spectrum - pulseviz'
 
     def __init__(self, sample_size, pulseaudio_client, **kwargs):
-        OpenGLWindow2D.__init__(self, **kwargs)  # TODO
+        super(SpectrumVisualizer, self).__init__(**kwargs)
         self.analyzer = FFTAnalyzer(sample_size=sample_size,
                                     pulseaudio_client=pulseaudio_client)
         self.auto_scale = True

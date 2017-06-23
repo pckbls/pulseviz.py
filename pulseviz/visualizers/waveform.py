@@ -16,7 +16,7 @@ class WaveformVisualizer(Visualizer):
     window_name = 'waveform - pulseviz'
 
     def __init__(self, sample_size, pulseaudio_client, **kwargs):
-        OpenGLWindow2D.__init__(self, **kwargs)  # TODO
+        super(WaveformVisualizer, self).__init__(**kwargs)
         self.analyzer = Sampler(sample_size=sample_size, pulseaudio_client=pulseaudio_client)
 
     def _display(self):
