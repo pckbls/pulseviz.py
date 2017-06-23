@@ -4,16 +4,19 @@ before_script:
   - pip3 install -r requirements.txt -r requirements-test.txt
 
 # test3.4:
+#   stage: test
 #   image: python:3.4
 #   script:
 #     - PULSE_SERVER="tcp:localhost:4713" PYTHONPATH=pulseviz py.test -v -s
 
 test3.5:
+  stage: test
   image: python:3.5
   script:
     - py.test -v -s -m "not visualizer"
 
 test3.6:
+  stage: test
   image: python:3.6
   script:
     - py.test -v -s -m "not visualizer"
