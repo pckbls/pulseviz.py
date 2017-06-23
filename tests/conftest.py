@@ -1,5 +1,5 @@
 import pytest
-from .pulseaudio.fake_simple_client import FakeSimpleRecordClient
+from .fake_simple_client import FakeSimpleRecordClient
 
 
 def pytest_addoption(parser):
