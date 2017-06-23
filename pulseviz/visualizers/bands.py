@@ -1,13 +1,9 @@
-import threading
-import numpy as np
-
+import numpy
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
-
 from . import visualizer
 from ..visualizer import Visualizer
-from ..opengl_window import OpenGLWindow2D
 from ..dsp.fft_bands import FFTBandsAnalayzer
 
 
@@ -19,62 +15,23 @@ class BandsVisualizer(Visualizer):
         super(BandsVisualizer, self).__init__(**kwargs)
         self.analyzer = FFTBandsAnalayzer(sample_size=sample_size,
                                           pulseaudio_client=pulseaudio_client)
-        self.analyzer.set_frequency_bands([
-            (0, 50),
-            (50, 100),
-            (100, 200),
-            (200, 400),
-            (400, 800),
-            (800, 1600),
-            (1600, 3200),
-            (3200, 6400),
-            (6400, 12800),
-            (12800, 22050)
-        ])
-        
-        self.frequency_bins = 10
-        self.bin_spacing = 5.0
-        self.bin_heights = np.linspace(0.0, 1.0, self.frequency_bins)
-        self.auto_scale = True
-        self.max_observed_y = None
+        self.analyzer.generate_octave_bands(fraction=3)
 
-        #self.setup_y_axis('lin', 0, 10)
-        self.setup_y_axis('log', -50, 50)
-        #self.setup_y_axis('lin', 0, None)
-    
-    def setup_y_axis(self, mode, min, max):
-        self.y_axis_mode = mode
-        self.y_axis_min = min
-        self.y_axis_max = max
+        self.y_axis_min = -50
+        self.y_axis_max = 50
+
+        self.bar_spacing = 0.01
+        self.bar_width = (1.0 - (self.analyzer.n() - 1) * self.bar_spacing) / self.analyzer.n()
 
     def _display(self):
-        bin_width = (self.width - (self.frequency_bins - 1) * self.bin_spacing) / self.frequency_bins
-
         with self.analyzer.fft_bands_lock:
-            self.bin_heights = self.analyzer.fft_bands
-
-            if self.y_axis_mode == 'lin':
-                self.bin_heights = np.array(self.bin_heights)
-            elif self.y_axis_mode == 'log':
-                self.bin_heights = 20 * np.log10(self.bin_heights)
-            else:
-                raise Exception('foo')  # TODO
-
-            self.bin_heights = (self.bin_heights - self.y_axis_min) / (self.y_axis_max - self.y_axis_min)
-
-        if False and self.auto_scale:
-            m = np.max(self.bin_heights)
-            if self.max_observed_y is None or m > self.max_observed_y:
-                self.max_observed_y = m
-            if self.max_observed_y > 0.0:
-                self.bin_heights /= self.max_observed_y
+            bar_heights = numpy.array(self.analyzer.fft_bands)
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-
-        for i in range(0, self.frequency_bins):
-            x_min = i * bin_width + i * self.bin_spacing
-            x_max = (i+1) * bin_width + i * self.bin_spacing
-            y = self.bin_heights[i] * self.height
+        for i in range(0, self.analyzer.n()):
+            x_min = (i * self.bar_width + i * self.bar_spacing) * self.width
+            x_max = ((i + 1) * self.bar_width + i * self.bar_spacing) * self.width
+            y = ((bar_heights[i] - self.y_axis_min) / (self.y_axis_max - self.y_axis_min)) * self.height
 
             glBegin(GL_QUADS)
             glColor3f(1.0, 0.0, 3.0)
@@ -84,5 +41,4 @@ class BandsVisualizer(Visualizer):
             glVertex3f(x_max, y, 0.0)
             glVertex3f(x_min, y, 0.0)
             glEnd()
-
         glutSwapBuffers()
