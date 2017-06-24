@@ -3,6 +3,13 @@ import numpy
 from .fft import FFTAnalyzer
 
 
+# TODO: Some useful links:
+# https://github.com/python-acoustics/python-acoustics/blob/master/acoustics/bands.py
+# http://blog.prosig.com/2006/02/17/standard-octave-bands/
+# https://en.wikipedia.org/wiki/Octave_band
+# http://www.engineeringtoolbox.com/octave-bands-frequency-limits-d_1602.html
+
+
 class FFTBandsAnalayzer(FFTAnalyzer):
     def __init__(self, **kwargs):
         super(FFTBandsAnalayzer, self).__init__(**kwargs)
