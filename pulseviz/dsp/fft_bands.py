@@ -37,16 +37,12 @@ class FFTBandsAnalayzer(FFTAnalyzer):
 
     def _sample(self):
         super(FFTBandsAnalayzer, self)._sample()
+
         with self.fft_bands_lock:
-            self._average_fft()
+            for i, (lower, upper) in enumerate(self.fft_bands_frequencies):
+                k = self.sample_size / self._pulseaudio_client.sample_frequency
+                m = int(numpy.ceil(lower * k))
+                n = int(numpy.ceil(upper * k))
+                self.fft_bands[i] = numpy.sum(self.fft[m:n]) / (upper - lower)
 
-    def _average_fft(self):
-        self.fft_bands = []
-        for lower, upper in self.fft_bands_frequencies:
-            blubb = []
-            for freq, value in zip(self.fft_frequencies, self.fft):
-                if lower <= freq <= upper:
-                    blubb.append(value)
-            self.fft_bands.append(sum(blubb) / (upper - lower))
-
-        self.fft_bands = 20 * numpy.log10(self.fft_bands)
+            self.fft_bands = 20 * numpy.log10(self.fft_bands)
