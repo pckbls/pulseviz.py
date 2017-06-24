@@ -21,6 +21,20 @@ class FFTBandsAnalayzer(FFTAnalyzer):
         self.fft_bands_frequencies = bands
         self.fft_bands = numpy.zeros(len(self.fft_bands_frequencies))
 
+    def generate_octave_bands(self, fraction=1):
+        bands_numbers = numpy.linspace(-6, 4, 10 * fraction)
+        center_frequencies = numpy.power(10.0, 3) * numpy.power(2.0, bands_numbers)
+        bands_frequencies = []
+        for freq in center_frequencies:
+            fd = numpy.power(2, 1 / 2)
+            lower = freq / fd
+            upper = freq * fd
+            bands_frequencies.append((lower, upper))
+        self.set_frequency_bands(bands_frequencies)
+
+    def n(self):
+        return len(self.fft_bands_frequencies)
+
     def _sample(self):
         super(FFTBandsAnalayzer, self)._sample()
         with self.fft_bands_lock:
@@ -34,3 +48,5 @@ class FFTBandsAnalayzer(FFTAnalyzer):
                 if lower <= freq <= upper:
                     blubb.append(value)
             self.fft_bands.append(sum(blubb) / (upper - lower))
+
+        self.fft_bands = 20 * numpy.log10(self.fft_bands)
