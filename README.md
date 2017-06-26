@@ -3,7 +3,7 @@ Right now it's more or less a proof of concept with little to no features.
 
 [![Build Status](https://travis-ci.org/pckbls/pulseviz.py.svg?branch=master)](https://travis-ci.org/pckbls/pulseviz.py)
 
-![Draft](images/draft.png)
+![Draft](images/draft_animated.gif)
 
 # Dependencies
 
