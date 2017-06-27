@@ -23,6 +23,8 @@ class BandsVisualizer(Visualizer):
         self.bar_spacing = 0.01
         self.bar_width = (1.0 - (self.analyzer.n() - 1) * self.bar_spacing) / self.analyzer.n()
 
+        self._ticks_y = self.y_axis_min * numpy.ones(self.analyzer.n())
+
     def _display(self):
         with self.analyzer.fft_bands_lock:
             bar_heights = numpy.array(self.analyzer.fft_bands)
@@ -31,14 +33,26 @@ class BandsVisualizer(Visualizer):
         for i in range(0, self.analyzer.n()):
             x_min = (i * self.bar_width + i * self.bar_spacing) * self.width
             x_max = ((i + 1) * self.bar_width + i * self.bar_spacing) * self.width
-            y = ((bar_heights[i] - self.y_axis_min) / (self.y_axis_max - self.y_axis_min)) * self.height
+            y = ((bar_heights[i] - self.y_axis_min) / (self.y_axis_max - self.y_axis_min))
+
+            if y > self._ticks_y[i]:
+                self._ticks_y[i] = y
+            else:
+                self._ticks_y[i] -= 0.005
 
             glBegin(GL_QUADS)
             glColor3f(1.0, 0.0, 3.0)
             glVertex3f(x_min, 0.0, 0.0)
             glVertex3f(x_max, 0.0, 0.0)
             glColor3f(0.3, 0.0, 1.0)
-            glVertex3f(x_max, y, 0.0)
-            glVertex3f(x_min, y, 0.0)
+            glVertex3f(x_max, y * self.height, 0.0)
+            glVertex3f(x_min, y * self.height, 0.0)
+            glEnd()
+
+            glLineWidth(2.0)
+            glBegin(GL_LINES)
+            glColor3f(1.0, 1.0, 1.0)
+            glVertex3f(x_min, self._ticks_y[i] * self.height + 2.0, 0.0)
+            glVertex3f(x_max, self._ticks_y[i] * self.height + 2.0, 0.0)
             glEnd()
         glutSwapBuffers()
