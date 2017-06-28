@@ -13,6 +13,11 @@ class BandsVisualizer(Visualizer):
 
     def __init__(self, sample_size, pulseaudio_client, **kwargs):
         super(BandsVisualizer, self).__init__(**kwargs)
+        # TODO: Remove this, once we can configure pulseviz properly.
+        # Override both sample size and refresh rate for this visualizer.
+        self.refresh_rate = 30.0
+        self.sample_size = 4096
+
         self.analyzer = FFTBandsAnalayzer(sample_size=sample_size,
                                           pulseaudio_client=pulseaudio_client)
         self.analyzer.generate_octave_bands(fraction=3)
