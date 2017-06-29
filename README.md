@@ -35,6 +35,7 @@ Those sources have a `.monitor` suffix.
 
 # Future goals
 
+* Make the transition to `pyglet` instead of using raw `PyOpenGL`.
 * Make visualizers configurable
   * Either via command line switches...
   * ...or via configuration file
