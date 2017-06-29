@@ -1,2 +1,2 @@
-pyopengl
+pyglet
 numpy
