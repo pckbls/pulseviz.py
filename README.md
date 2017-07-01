@@ -7,8 +7,8 @@ Right now it's more or less a proof of concept with little to no features.
 
 # Dependencies
 
-A recent version of Python 3 (3.5 and above), `PyOpenGL`, `numpy` and (of course) PulseAudio are required.
-Both `PyOpenGL` and `numpy` should be part of the official repositories for all major Linux distributions.
+A recent version of Python 3 (3.5 and above), `pyglet`, `numpy` and (of course) PulseAudio are required.
+Both `pyglet` and `numpy` should be part of the official repositories for all major Linux distributions.
 Alternatively they can be installed via `pip3`:
 
     pip3 install -r requirements.txt
@@ -35,7 +35,6 @@ Those sources have a `.monitor` suffix.
 
 # Future goals
 
-* Make the transition to `pyglet` instead of using raw `PyOpenGL`.
 * Make visualizers configurable
   * Either via command line switches...
   * ...or via configuration file
