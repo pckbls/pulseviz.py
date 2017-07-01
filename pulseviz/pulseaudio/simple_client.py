@@ -158,6 +158,10 @@ class SimplePlaybackClient(SimpleClient):
         if result < 0:
             raise SimpleClientErrorException('Could not write data.', error.value)
 
+    def write_samples(self, data):
+        # TODO
+        raise Exception('Not implemented yet.')
+
     def drain(self):
         error = ctypes.c_int(0)
 
