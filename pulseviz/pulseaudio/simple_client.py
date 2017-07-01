@@ -3,6 +3,9 @@ from enum import Enum
 
 
 # TODO: Improve Enum type
+# TODO: Raise exception when `with client` statement hasn't been executed before trying to read/write data.
+# TODO: Add method comments
+# TODO: Add underscore to private class members
 
 
 class SampleSpec(ctypes.Structure):
