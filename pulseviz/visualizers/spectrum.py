@@ -69,6 +69,8 @@ class SpectrumVisualizerWindow(VisualizerWindow):
                 gl.glVertex3f(x, y * self.height, 0.0)
             gl.glEnd()
 
+        self.draw_debug_overlay()
+
 
 @visualizer(name='spectrum')
 class SpectrumVisualizer(Visualizer):

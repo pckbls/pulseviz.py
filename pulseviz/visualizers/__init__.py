@@ -2,6 +2,8 @@ import pyglet
 from ..dsp import PulseAudioSignalAnalayzer
 
 
+# TODO: Create new class based on pyglet.window.FPSDisplay and make it draw both FPS and the PulseAudio client latency.
+
 registry = {}
 
 
@@ -16,17 +18,27 @@ class VisualizerWindow(pyglet.window.Window):
     def __init__(self, visualizer, **kwargs):
         super().__init__(**kwargs)
 
+        self.debug_overlay = False
+
         self._visualizer = visualizer
         self._analyzer = self._visualizer._analyzer  # TODO: We access a private variable here
+        self._fps_display = pyglet.window.FPSDisplay(self)
 
     def on_draw(self):
         self.clear()
+        self.draw_debug_overlay()
 
     def on_key_press(self, symbol, modifiers):
         if symbol == ord('q'):
             self._visualizer.stop()
         elif symbol == ord('f'):
             self.set_fullscreen(not self.fullscreen)
+        elif symbol == ord('d'):
+            self.debug_overlay = not self.debug_overlay
+
+    def draw_debug_overlay(self):
+        if self.debug_overlay:
+            self._fps_display.draw()
 
 
 class Visualizer(object):

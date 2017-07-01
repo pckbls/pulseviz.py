@@ -23,6 +23,8 @@ class WaveformVisualizerWindow(VisualizerWindow):
                 gl.glVertex3f(x_min, y, 0.0)
             gl.glEnd()
 
+        self.draw_debug_overlay()
+
 
 @visualizer(name='waveform')
 class WaveformVisualizer(Visualizer):

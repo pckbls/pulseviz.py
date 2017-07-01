@@ -79,6 +79,8 @@ class BandsVisualizerWindow(VisualizerWindow):
                 gl.glVertex3f(x_max, self._ticks_y[i] * self.height + 2.0, 0.0)
                 gl.glEnd()
 
+        self.draw_debug_overlay()
+
 
 @visualizer(name='bands')
 class BandsVisualizer(Visualizer):
