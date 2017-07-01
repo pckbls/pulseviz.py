@@ -22,8 +22,8 @@ test3.5:
   script:
     - py.test -v -s -m "not visualizer" --benchmark-skip
 
-test3.6:
-  stage: test
-  image: python:3.6
-  script:
-    - py.test -v -s -m "not visualizer" --benchmark-skip
+# test3.6:
+#   stage: test
+#   image: python:3.6
+#   script:
+#     - py.test -v -s -m "not visualizer" --benchmark-skip
