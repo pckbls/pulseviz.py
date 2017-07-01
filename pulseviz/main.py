@@ -3,9 +3,11 @@ from .pulseaudio.simple_client import SimpleRecordClient
 from .pulseaudio import pacmd
 from . import visualizers
 
-
-REFRESH_RATE = 10.0
-SAMPLE_SIZE = 2048
+# Import all our visualizers so that they get registered even if we do not actually use them.
+from .visualizers import dummy  # noqa
+from .visualizers import waveform  # noqa
+from .visualizers import spectrum  # noqa
+from .visualizers import bands  # noqa
 
 
 def print_help():
@@ -36,8 +38,5 @@ def main():
         print_help()
 
     client = SimpleRecordClient(source=source)
-    window = visualizer_type(refresh_rate=REFRESH_RATE,
-                             sample_size=SAMPLE_SIZE,
-                             pulseaudio_client=client)
+    window = visualizer_type(pulseaudio_client=client)
     window.start()
-    window.join()
