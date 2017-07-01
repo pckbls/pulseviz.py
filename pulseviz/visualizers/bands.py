@@ -16,6 +16,7 @@ class BandsVisualizerWindow(VisualizerWindow):
         self.y_axis_min = -50
         self.y_axis_max = 50
         self.bars_spacing = 0.005
+        self.bars_velocity = 0.0
         self.draw_ticks = True
 
         self._bars_width = (1.0 - (self._analyzer.n() - 1) * self.bars_spacing) / self._analyzer.n()
@@ -29,8 +30,22 @@ class BandsVisualizerWindow(VisualizerWindow):
             bars_height = numpy.array(self._analyzer.fft_bands)
 
         for i in range(0, self._analyzer.n()):
-            y = numpy.clip((bars_height[i] - self.y_axis_min) / (self.y_axis_max - self.y_axis_min), 0.0, 1.0)
-            self._bars_height[i] = y
+            y = numpy.clip((bars_height[i] - self.y_axis_min) / (self.y_axis_max - self.y_axis_min), 0.001, 1.0)
+
+            if self.bars_velocity > 0.0:
+                # Animate the bars
+                sign = numpy.sign(y - self._bars_height[i])
+                if sign == 1.0:
+                    self._bars_height[i] += self.bars_velocity * dt
+                    if self._bars_height[i] > y:
+                        self._bars_height[i] = y
+                elif sign == -1.0:
+                    self._bars_height[i] -= self.bars_velocity * dt
+                    if self._bars_height[i] < y:
+                        self._bars_height[i] = y
+            else:
+                # Bar animations are disabled
+                self._bars_height[i] = y
 
         # Animate the ticks
         for i in range(0, self._analyzer.n()):
