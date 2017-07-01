@@ -1,63 +1,80 @@
 import numpy
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from OpenGL.GLUT import *
-from . import visualizer
-from ..visualizer import Visualizer
+import pyglet
+from pyglet import gl
+from . import visualizer, Visualizer, VisualizerWindow
 from ..dsp.fft_bands import FFTBandsAnalayzer
+
+
+class BandsVisualizerWindow(VisualizerWindow):
+    # TODO:
+    # Use a shader for rendering and offload some of the calculations into it, this should yield a big
+    # performance improvement.
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.y_axis_min = -50
+        self.y_axis_max = 50
+        self.bars_spacing = 0.005
+        self.draw_ticks = True
+
+        self._bars_width = (1.0 - (self._analyzer.n() - 1) * self.bars_spacing) / self._analyzer.n()
+        self._bars_x_min = None
+        self._bars_x_max = None
+        self._bars_height = numpy.zeros(self._analyzer.n())
+        self._ticks_y = numpy.zeros(self._analyzer.n())
+
+    def update(self, dt):
+        with self._analyzer.fft_bands_lock:
+            bars_height = numpy.array(self._analyzer.fft_bands)
+
+        for i in range(0, self._analyzer.n()):
+            y = numpy.clip((bars_height[i] - self.y_axis_min) / (self.y_axis_max - self.y_axis_min), 0.0, 1.0)
+            self._bars_height[i] = y
+
+        # Animate the ticks
+        for i in range(0, self._analyzer.n()):
+            self._ticks_y[i] -= 0.25 * dt
+            if self._bars_height[i] > self._ticks_y[i]:
+                self._ticks_y[i] = self._bars_height[i]
+
+    def on_draw(self):
+        self.clear()
+
+        for i in range(0, self._analyzer.n()):
+            # TODO: Calculate those in on_resize()
+            x_min = (i * self._bars_width + i * self.bars_spacing) * self.width
+            x_max = ((i + 1) * self._bars_width + i * self.bars_spacing) * self.width
+
+            if self._bars_height[i] > 0:
+                gl.glBegin(gl.GL_QUADS)
+                gl.glColor3f(1.0, 0.0, 3.0)
+                gl.glVertex3f(x_min, 0.0, 0.0)
+                gl.glVertex3f(x_max, 0.0, 0.0)
+                gl.glColor3f(0.3, 0.0, 1.0)
+                gl.glVertex3f(x_max, self._bars_height[i] * self.height, 0.0)
+                gl.glVertex3f(x_min, self._bars_height[i] * self.height, 0.0)
+                gl.glEnd()
+
+            if self.draw_ticks and self._ticks_y[i] > 0:
+                gl.glLineWidth(2.0)
+                gl.glBegin(gl.GL_LINES)
+                gl.glColor3f(1.0, 1.0, 1.0)
+                gl.glVertex3f(x_min, self._ticks_y[i] * self.height + 2.0, 0.0)
+                gl.glVertex3f(x_max, self._ticks_y[i] * self.height + 2.0, 0.0)
+                gl.glEnd()
 
 
 @visualizer(name='bands')
 class BandsVisualizer(Visualizer):
-    window_name = 'frequency bands - pulseviz'
+    VISUALIZER_WINDOW_TYPE = BandsVisualizerWindow
+    WINDOW_TITLE = 'Octave Bands Visualizer'
 
-    def __init__(self, sample_size, pulseaudio_client, **kwargs):
-        super(BandsVisualizer, self).__init__(**kwargs)
-        # TODO: Remove this, once we can configure pulseviz properly.
-        # Override both sample size and refresh rate for this visualizer.
-        self.refresh_rate = 30.0
-        self.sample_size = 4096
+    def setup_analyzer(self):
+        self._analyzer = FFTBandsAnalayzer(pulseaudio_client=self._pulseaudio_client,
+                                           sample_size=4096)
+        self._analyzer.generate_octave_bands(fraction=3)
 
-        self.analyzer = FFTBandsAnalayzer(sample_size=sample_size,
-                                          pulseaudio_client=pulseaudio_client)
-        self.analyzer.generate_octave_bands(fraction=3)
-
-        self.y_axis_min = -50
-        self.y_axis_max = 50
-
-        self.bar_spacing = 0.01
-        self.bar_width = (1.0 - (self.analyzer.n() - 1) * self.bar_spacing) / self.analyzer.n()
-
-        self._ticks_y = self.y_axis_min * numpy.ones(self.analyzer.n())
-
-    def _display(self):
-        with self.analyzer.fft_bands_lock:
-            bar_heights = numpy.array(self.analyzer.fft_bands)
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        for i in range(0, self.analyzer.n()):
-            x_min = (i * self.bar_width + i * self.bar_spacing) * self.width
-            x_max = ((i + 1) * self.bar_width + i * self.bar_spacing) * self.width
-            y = ((bar_heights[i] - self.y_axis_min) / (self.y_axis_max - self.y_axis_min))
-
-            if y > self._ticks_y[i]:
-                self._ticks_y[i] = y
-            else:
-                self._ticks_y[i] -= 0.005
-
-            glBegin(GL_QUADS)
-            glColor3f(1.0, 0.0, 3.0)
-            glVertex3f(x_min, 0.0, 0.0)
-            glVertex3f(x_max, 0.0, 0.0)
-            glColor3f(0.3, 0.0, 1.0)
-            glVertex3f(x_max, y * self.height, 0.0)
-            glVertex3f(x_min, y * self.height, 0.0)
-            glEnd()
-
-            glLineWidth(2.0)
-            glBegin(GL_LINES)
-            glColor3f(1.0, 1.0, 1.0)
-            glVertex3f(x_min, self._ticks_y[i] * self.height + 2.0, 0.0)
-            glVertex3f(x_max, self._ticks_y[i] * self.height + 2.0, 0.0)
-            glEnd()
-        glutSwapBuffers()
+    def start(self, **kwargs):
+        pyglet.clock.schedule_interval(self._window.update, 1 / 60)
+        super().start(**kwargs)
