@@ -4,7 +4,7 @@ from .pulseaudio import pacmd
 from . import visualizers
 
 # Import all our visualizers so that they get registered even if we do not actually use them.
-from .visualizers import dummy  # noqa
+# from .visualizers import dummy  # noqa
 from .visualizers import waveform  # noqa
 from .visualizers import spectrum  # noqa
 from .visualizers import bands  # noqa
