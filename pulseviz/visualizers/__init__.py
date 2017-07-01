@@ -25,6 +25,8 @@ class VisualizerWindow(pyglet.window.Window):
     def on_key_press(self, symbol, modifiers):
         if symbol == ord('q'):
             self._visualizer.stop()
+        elif symbol == ord('f'):
+            self.set_fullscreen(not self.fullscreen)
 
 
 class Visualizer(object):
