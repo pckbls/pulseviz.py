@@ -38,9 +38,12 @@ Those sources have a `.monitor` suffix.
 * Make visualizers configurable
   * Either via command line switches...
   * ...or via configuration file
+* Stereo support
 * Create more visually appealing visualiziations such as
   * [Spectrogram](https://en.wikipedia.org/wiki/Spectrogram#/media/File:Spectrogram-19thC.png)
+  * Vectroscope/Stereometer for visualizing the correlation between multiple audio channels
   * [Kodi's rotating 3D Spectrum visualizer](http://kodi.wiki/view/File:Fullscreen_music_controls.png).
   * [Shadertoy](https://www.shadertoy.com/) visualization
+  * [projectM](http://projectm.sourceforge.net/) visualization
 * Optimize for speed. Smooth 60 frames per seconds with minimal CPU usage are the target.
 * Experiment with different digital signal processing algorithms.
