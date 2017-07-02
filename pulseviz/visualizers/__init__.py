@@ -50,7 +50,7 @@ class Visualizer(object):
         self._analyzer = None
         self.setup_analyzer()
         self._window = self.VISUALIZER_WINDOW_TYPE(visualizer=self,
-                                                   resizable=False,
+                                                   resizable=True,
                                                    caption=self.WINDOW_TITLE + ' - pulseviz.py')
 
     def setup_analyzer(self):
