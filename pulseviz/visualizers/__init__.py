@@ -30,11 +30,14 @@ class VisualizerWindow(pyglet.window.Window):
 
     def on_key_press(self, symbol, modifiers):
         if symbol == ord('q'):
-            self._visualizer.stop()
+            self.on_close()
         elif symbol == ord('f'):
             self.set_fullscreen(not self.fullscreen)
         elif symbol == ord('d'):
             self.debug_overlay = not self.debug_overlay
+
+    def on_close(self):
+        self._visualizer.stop()
 
     def draw_debug_overlay(self):
         if self.debug_overlay:
