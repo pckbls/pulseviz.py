@@ -89,7 +89,8 @@ class BandsVisualizer(Visualizer):
 
     def setup_analyzer(self):
         self._analyzer = FFTBandsAnalayzer(pulseaudio_client=self._pulseaudio_client,
-                                           sample_size=4096)
+                                           sample_size=4096,
+                                           window_function='hanning')
         self._analyzer.generate_octave_bands(fraction=3)
 
     def start(self, **kwargs):
