@@ -7,7 +7,12 @@ class FFTAnalyzer(Sampler):
     def __init__(self, window_function=None, **kwargs):
         super(FFTAnalyzer, self).__init__(**kwargs)
 
-        self._window_function = numpy.hanning(self.sample_size)
+        if window_function is None:
+            self._window_function = numpy.ones(self.sample_size)  # TODO: Correct?
+        elif window_function == 'hanning':
+            self._window_function = numpy.hanning(self.sample_size)
+        else:
+            raise Exception('Unknown window function: {0}'.format(window_function))
 
         self.fft_lock = threading.Lock()
         self.fft = numpy.zeros(int(self.sample_size / 2), dtype='f')
@@ -19,7 +24,6 @@ class FFTAnalyzer(Sampler):
             self._calculate_fft()
 
     def _calculate_fft(self):
-        x = self._window_function * self.samples
-        self.fft = numpy.abs(numpy.fft.rfft(x))
+        self.fft = numpy.abs(numpy.fft.rfft(self._window_function * self.samples))
         self.fft_frequencies = numpy.fft.rfftfreq(self.sample_size,
                                                   1.0 / self._pulseaudio_client.sample_frequency)
