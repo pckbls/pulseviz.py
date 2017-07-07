@@ -101,6 +101,13 @@ class SimpleClient:
             raise SimpleClientErrorException('Could not determine latency.', error.value)
         return latency
 
+    def flush(self):
+        error = ctypes.c_int(0)
+
+        result = libpulse_simple.pa_simple_flush(self.client, error)
+        if result < 0:
+            raise SimpleClientErrorException('Could not flush data.', error.value)
+
 
 class SimpleRecordClient(SimpleClient):
     pa_stream_direction = StreamDirection.PA_STREAM_RECORD
@@ -226,6 +233,12 @@ libpulse_simple.pa_simple_write.argtypes = [
 
 # pa_simple_drain()
 libpulse_simple.pa_simple_drain.argtypes = [
+    ctypes.c_void_p, # TODO: pa_simple struct,
+    ctypes.POINTER(ctypes.c_int)
+]
+
+# pa_simple_flush()
+libpulse_simple.pa_simple_flush.argtypes = [
     ctypes.c_void_p, # TODO: pa_simple struct,
     ctypes.POINTER(ctypes.c_int)
 ]
