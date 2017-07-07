@@ -1,5 +1,4 @@
 import sys
-from .pulseaudio.simple_client import SimpleRecordClient
 from .pulseaudio import pacmd
 from . import visualizers
 
@@ -37,6 +36,5 @@ def main():
     if visualizer_type is None:
         print_help()
 
-    client = SimpleRecordClient(source=source)
-    window = visualizer_type(pulseaudio_client=client)
+    window = visualizer_type(source_name=source)
     window.start()

@@ -48,15 +48,14 @@ class Visualizer(object):
     VISUALIZER_WINDOW_TYPE = VisualizerWindow
     WINDOW_TITLE = '(N/A)'
 
-    def __init__(self, pulseaudio_client):
-        self._pulseaudio_client = pulseaudio_client
+    def __init__(self, source_name):
         self._analyzer = None
-        self.setup_analyzer()
+        self.setup_analyzer(source_name)
         self._window = self.VISUALIZER_WINDOW_TYPE(visualizer=self,
                                                    resizable=True,
                                                    caption=self.WINDOW_TITLE + ' - pulseviz.py')
 
-    def setup_analyzer(self):
+    def setup_analyzer(self, source_name):
         pass
 
     def start(self):

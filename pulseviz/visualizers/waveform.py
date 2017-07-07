@@ -31,9 +31,9 @@ class WaveformVisualizer(Visualizer):
     VISUALIZER_WINDOW_TYPE = WaveformVisualizerWindow
     WINDOW_TITLE = 'Waveform Visualizer'
 
-    def setup_analyzer(self):
-        self._analyzer = Sampler(pulseaudio_client=self._pulseaudio_client,
-                                 sample_size=4096)
+    def setup_analyzer(self, source_name):
+        self._analyzer = Sampler(source_name=source_name,
+                                 sample_size=2048)
 
     def start(self, **kwargs):
         pyglet.clock.schedule_interval(self._window.update, 1 / 10)

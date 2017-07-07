@@ -77,8 +77,8 @@ class SpectrumVisualizer(Visualizer):
     VISUALIZER_WINDOW_TYPE = SpectrumVisualizerWindow
     WINDOW_TITLE = 'Spectrum Visualizer'
 
-    def setup_analyzer(self):
-        self._analyzer = FFTAnalyzer(pulseaudio_client=self._pulseaudio_client,
+    def setup_analyzer(self, source_name):
+        self._analyzer = FFTAnalyzer(source_name=source_name,
                                      sample_size=4096)
 
     def start(self, **kwargs):

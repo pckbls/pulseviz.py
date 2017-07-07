@@ -2,7 +2,7 @@ import numpy
 import pyglet
 from pyglet import gl
 from . import visualizer, Visualizer, VisualizerWindow
-from ..dsp.fft_bands import FFTBandsAnalayzer
+from ..dsp.octave_bands import OctaveBandsAnalayzer
 
 
 class BandsVisualizerWindow(VisualizerWindow):
@@ -26,8 +26,8 @@ class BandsVisualizerWindow(VisualizerWindow):
         self._ticks_y = numpy.zeros(self._analyzer.n())
 
     def update(self, dt):
-        with self._analyzer.fft_bands_lock:
-            bars_height = numpy.array(self._analyzer.fft_bands)
+        with self._analyzer.bands_lock:
+            bars_height = numpy.array(self._analyzer.bands_values)
 
         for i in range(0, self._analyzer.n()):
             y = numpy.clip((bars_height[i] - self.y_axis_min) / (self.y_axis_max - self.y_axis_min), 0.001, 1.0)
@@ -87,11 +87,11 @@ class BandsVisualizer(Visualizer):
     VISUALIZER_WINDOW_TYPE = BandsVisualizerWindow
     WINDOW_TITLE = 'Octave Bands Visualizer'
 
-    def setup_analyzer(self):
-        self._analyzer = FFTBandsAnalayzer(pulseaudio_client=self._pulseaudio_client,
-                                           sample_size=4096,
-                                           window_function='hanning')
-        self._analyzer.generate_octave_bands(fraction=3)
+    def setup_analyzer(self, source_name):
+        self._analyzer = OctaveBandsAnalayzer(source_name=source_name,
+                                              sample_size=4096,
+                                              window_function='hanning',
+                                              fraction=3)
 
     def start(self, **kwargs):
         pyglet.clock.schedule_interval(self._window.update, 1 / 60)
