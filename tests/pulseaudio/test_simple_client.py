@@ -10,28 +10,50 @@ from pulseviz.pulseaudio import simple_client
 # TODO: Test different channel settings (mono, stereo)
 
 
+@pytest.fixture()
+def fixture_simple_client(fixture_pulseaudio_server, request):
+    return simple_client.SimpleClient(name='pulseviz-tests',
+                                      stream_name=request.function.__name__)
+
+
+@pytest.fixture()
+def fixture_simple_record_client(fixture_null_sink, request):
+    _, source_name = fixture_null_sink
+    return simple_client.SimpleRecordClient(source=source_name,
+                                            name='pulseviz-tests',
+                                            stream_name=request.function.__name__)
+
+
+@pytest.fixture()
+def fixture_simple_playback_client(fixture_null_sink, request):
+    sink_name, _ = fixture_null_sink
+    return simple_client.SimplePlaybackClient(sink=sink_name,
+                                              name='pulseviz-tests',
+                                              stream_name=request.function.__name__)
+
+
 @pytest.mark.xfail(raises=simple_client.SimpleClientErrorException)
-def test_simple_client_failure(simple_client_fixture):
-    c = simple_client_fixture
+def test_simple_client_failure(fixture_simple_client):
+    c = fixture_simple_client
     with c:
         pass
 
 
-def test_simple_record_client_enter_exit(simple_record_client_fixture):
-    c = simple_record_client_fixture
+def test_simple_record_client_enter_exit(fixture_simple_record_client):
+    c = fixture_simple_record_client
     with c:
         pass
 
 
-def test_simple_record_client_get_latency(simple_record_client_fixture):
-    c = simple_record_client_fixture
+def test_simple_record_client_get_latency(fixture_simple_record_client):
+    c = fixture_simple_record_client
     with c:
         latency = c.get_latency()
         assert latency > 0
 
 
-def test_simple_record_client_read(simple_record_client_fixture):
-    c = simple_record_client_fixture
+def test_simple_record_client_read(fixture_simple_record_client):
+    c = fixture_simple_record_client
     with c:
         for size in [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]:
             data = c.read(size=size)
@@ -39,8 +61,8 @@ def test_simple_record_client_read(simple_record_client_fixture):
             assert type(data) is list
 
 
-def test_simple_playback_client_write(simple_playback_client_fixture):
-    c = simple_playback_client_fixture
+def test_simple_playback_client_write(fixture_simple_playback_client):
+    c = fixture_simple_playback_client
     with c:
         # TODO: 1 and 2 do not work.
         for size in [4, 8, 16, 32, 64, 128, 256, 512, 1024]:
@@ -49,39 +71,22 @@ def test_simple_playback_client_write(simple_playback_client_fixture):
             c.write(data)
 
 
-@pytest.mark.skip(reason='Too slow.')
-def test_read_write(fixture_pulseaudio_server):
-    def playback_task():
-        # TODO: Use Barrier object to wait for record_task to
-        # start recording
+@pytest.mark.skip(reason='Not implemented yet.')
+def test_simple_record_client_no_server(fixture_simple_record_client):
+    assert False
 
-        c = simple_client.SimplePlaybackClient(source=b'null', sample_frequency=16)
-        with c:
-            start_ts = time.time()
-            while time.time() - start_ts < 5.0:
-                data = [random.randint(0, 255) for _ in range(0, 512)]
-                c.write(data)
-                c.drain()
 
-    def record_task(result):
-        c = simple_client.SimpleRecordClient(source=b'null.monitor', sample_frequency=16)
-        with c:
-            start_ts = time.time()
-            while time.time() - start_ts < 5.0:
-                read_data = c.read(size=512)
-                if sum(read_data) != 0:
-                    result.put(True)
-                    return
-            result.put(False)
+@pytest.mark.skip(reason='Not implemented yet.')
+def test_simple_playback_client_no_server(fixture_simple_playback_client):
+    assert False
 
-    q = queue.Queue()
-    record = threading.Thread(target=record_task, args=(q,), name='record')
-    playback = threading.Thread(target=playback_task, name='playback')
 
-    record.start()
-    playback.start()
+@pytest.mark.skip(reason='Not implemented yet.')
+def test_simple_record_client_kill_server(fixture_simple_record_client):
+    assert False
 
-    record.join()
-    playback.join()
 
-    assert q.get()
+@pytest.mark.skip(reason='Not implemented yet.')
+def test_simple_playback_client_kill_server(fixture_simple_playback_client):
+    assert False
+
