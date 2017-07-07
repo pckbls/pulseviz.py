@@ -25,7 +25,7 @@ class OctaveBandsAnalayzer(FFTAnalyzer):
         return len(self.bands_frequencies)
 
     def _calculate_octave_bands_frequencies(self, fraction=1):
-        bands_numbers = numpy.linspace(-6, 4, 10 * fraction)  # TODO: Use 11 here
+        bands_numbers = numpy.linspace(-6, 4, 11 * fraction)
         center_frequencies = numpy.power(10.0, 3) * numpy.power(2.0, bands_numbers)
         bands_frequencies = []
 
