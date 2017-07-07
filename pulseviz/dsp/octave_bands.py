@@ -15,7 +15,7 @@ class OctaveBandsAnalayzer(FFTAnalyzer):
 
         self.bands_lock = threading.Lock()
         self.bands_frequencies = self._calculate_octave_bands_frequencies(fraction=fraction)
-        self.bands_values = numpy.zeros(len(self.bands_frequencies))
+        self.bands_values = -numpy.inf * numpy.ones(len(self.bands_frequencies))
 
         self._bands_weights = self._calculate_bands_weighting(weighting)
 
@@ -73,7 +73,10 @@ class OctaveBandsAnalayzer(FFTAnalyzer):
                 n = int(numpy.ceil(upper * k))
                 self.bands_values[i] = numpy.sum(self.fft[m:n]) / (upper - lower)
 
-            self.bands_values = 20 * numpy.log10(self.bands_values)
+            if 0 in self.bands_values:
+                self.bands_values = -numpy.inf * numpy.ones(len(self.bands_frequencies))
+            else:
+                self.bands_values = 20 * numpy.log10(self.bands_values)
 
             for i, _ in enumerate(self.bands_frequencies):
                 self.bands_values[i] += self._bands_weights[i]
