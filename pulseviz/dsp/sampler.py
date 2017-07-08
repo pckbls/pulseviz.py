@@ -16,6 +16,6 @@ class Sampler(PulseAudioSignalAnalayzer):
         self.samples = numpy.zeros(self.sample_size, dtype='f')
 
     def _sample(self):
-        samples = numpy.array(self._pulseaudio_client.read_samples(size=self.sample_size), dtype='f')
+        samples = numpy.array(self._pulseaudio_client.read(size=self.sample_size), dtype='f')
         with self.samples_lock:
             self.samples = samples
