@@ -4,10 +4,10 @@ python:
   - "3.6"
 dist: trusty
 sudo: required
-script: pytest -v -s -m "not visualizer"
+script: pytest -v --benchmark-skip --minimal-pulseaudio-server
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq -y pulseaudio
+  - sudo apt-get install -qq -y psmisc pulseaudio
 install: "pip install -r requirements.txt -r requirements-test.txt"
 notifications:
   email: false
