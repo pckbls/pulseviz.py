@@ -1,7 +1,7 @@
 import threading
 import random
 import numpy
-from pulseviz.pulseaudio.simple_client import SimplePlaybackClient
+from pulseviz.pulseaudio.simple_client import SimplePlaybackClient, SampleFormat
 
 
 def random_generator(sample_frequency):
@@ -15,6 +15,7 @@ def sine_generator(sample_frequency):
     while True:
         yield numpy.sin(t)
         t += 0.05
+
 
 def null_generator(sample_frequency):
     while True:
@@ -32,7 +33,9 @@ class SignalGenerator(threading.Thread):
         self._sample_frequency = sample_frequency
         self._sample_size = sample_size
         self._pa_client = SimplePlaybackClient(sink=self._sink_name,
-                                               sample_frequency=self._sample_frequency)
+                                               sample_frequency=self._sample_frequency,
+                                               sample_format=SampleFormat.PA_SAMPLE_U8,  # TODO
+                                               channels=1)
         self._stop_event = threading.Event()
 
     def __enter__(self):
@@ -69,8 +72,7 @@ class SignalGenerator(threading.Thread):
             while not self._stop_event.is_set():
                 samples = self._read_samples_from_signal_generator(self._sample_size)
 
-                # Convert the samples for SampleFormat.PA_SAMPLE_U8
-                # TODO: Use self._pa_client.write_samples() instead.
+                # TODO: Use FLOAT32LE instead
                 quantized_samples = [int((x + 1.0) * 128.0) for x in samples]
 
                 self._pa_client.write(quantized_samples)
