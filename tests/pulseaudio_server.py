@@ -1,3 +1,4 @@
+import pytest
 import subprocess
 import time
 
@@ -5,14 +6,19 @@ import time
 def start():
     """Starts a PulseAudio server."""
 
-    subprocess.run([
-        'pulseaudio',
-        '-n',
-        '-F', 'tests/data/minimal_server.pa',
-        '--exit-idle-time', '1337',
-        '--start',
-        '-vvvv'
-    ])
+    if pytest.config.getoption('--minimal-pulseaudio-server') is not None:
+        subprocess.run([
+            'pulseaudio',
+            '-n',
+            '-F', 'tests/data/minimal_server.pa',
+            '--exit-idle-time', '1337',
+            '--start',
+            '-vvvv'
+        ])
+    else:
+        subprocess.run(['pulseaudio', '--start'])
+
+    time.sleep(3.0)
 
     assert is_running()
 
