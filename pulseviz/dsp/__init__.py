@@ -16,7 +16,7 @@ class PulseAudioSignalAnalayzer(threading.Thread):
                                                      sample_frequency=sample_frequency,
                                                      sample_format=SampleFormat.PA_SAMPLE_FLOAT32LE,
                                                      channels=1,
-                                                     target_latency=10 * 1000 * 1000)
+                                                     target_latency=10 * 1000)
         self._stop_event = threading.Event()
 
         self.exit_success = None
