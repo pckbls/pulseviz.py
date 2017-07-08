@@ -26,12 +26,12 @@ def start():
 def stop(kill=False):
     """Stops (or alternatively kills) all PulseAudio servers."""
 
+    subprocess.run(['pulseaudio', '--kill'])
+    time.sleep(3.0)
+
     if kill:
         subprocess.run(['killall', '-9', 'pulseaudio'])
-    else:
-        subprocess.run(['pulseaudio', '--kill'])
-
-    time.sleep(3.0)  # TODO
+    time.sleep(3.0)
 
     assert not is_running()
 
