@@ -98,6 +98,10 @@ class _SimpleClient:
     def sample_frequency(self):
         return self._sample_frequency
 
+    @property
+    def sample_format(self):
+        return self._sample_format
+
     def connect(self):
         """Establishes a connection to a PulseAudio server."""
 
