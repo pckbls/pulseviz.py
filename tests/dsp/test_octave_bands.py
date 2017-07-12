@@ -70,3 +70,21 @@ def test_Z_weighting():
     assert analyzer._calculate_weighting_for_frequency(0.0, 'Z') == 1.0
     assert analyzer._calculate_weighting_for_frequency(1337.0, 'Z') == 1.0
     assert analyzer._calculate_weighting_for_frequency(20000.0, 'Z') == 1.0
+
+
+@pytest.mark.parametrize('fraction', [1, 3, 6, 9])
+@pytest.mark.parametrize('weighting', ['A', 'C', 'Z'])
+def test_benchmark(fixture_fake_simple_client, benchmark, fraction, weighting):
+    analyzer = OctaveBands(sample_size=2048,
+                           fraction=fraction,
+                           weighting=weighting,
+                           source_name='foobar',
+                           stream_name='pulseviz-tests')
+
+    def benchmark_func():
+        for _ in range(0, 1000):
+            analyzer._sample()
+
+    analyzer._pulseaudio_client.connect()
+    benchmark(benchmark_func)
+    analyzer._pulseaudio_client.disconnect()
