@@ -2,7 +2,7 @@ import numpy as np
 import pyglet
 from pyglet import gl
 from . import visualizer, Visualizer, VisualizerWindow
-from ..dsp.fft import FFTAnalyzer
+from ..dsp.fft import FFT
 
 
 class SpectrumVisualizerWindow(VisualizerWindow):
@@ -12,7 +12,7 @@ class SpectrumVisualizerWindow(VisualizerWindow):
         self.max_observed_y = None
 
         self.setup_x_axis('log')
-        self.setup_y_axis('log', -70, 70)
+        self.setup_y_axis('log', -120, 0)
 
     def setup_x_axis(self, mode):
         self.x_axis_mode = mode
@@ -30,12 +30,12 @@ class SpectrumVisualizerWindow(VisualizerWindow):
         super().on_resize(width, height)
 
         if self.x_axis_mode == 'lin':
-            self.x_coordinates = np.linspace(0, self.width, len(self._analyzer.fft))
+            self.x_coordinates = np.linspace(0, self.width, len(self._analyzer.values))
         elif self.x_axis_mode == 'log':
             self.x_coordinates = self.width + 1
             self.x_coordinates -= np.logspace(np.log2(self.width + 1),
                                               0,
-                                              len(self._analyzer.fft),
+                                              len(self._analyzer.values),
                                               base=2)
         else:
             raise Exception('Unknown option: {0}'.format(self.x_axis_mode))
@@ -43,12 +43,12 @@ class SpectrumVisualizerWindow(VisualizerWindow):
     def on_draw(self):
         self.clear()
 
-        with self._analyzer.fft_lock:
+        with self._analyzer.lock:
             if self.y_axis_mode == 'lin':
-                y_coordinates = self._analyzer.fft
+                y_coordinates = self._analyzer.values
             elif self.y_axis_mode == 'log':
                 # TODO: Fix division-by-zero RuntimeWarnings.
-                y_coordinates = 20 * np.log10(self._analyzer.fft)
+                y_coordinates = 20 * np.log10(self._analyzer.values)
             else:
                 raise Exception('Unknown option: {0}'.format(self.x_axis_mode))
 
@@ -78,8 +78,8 @@ class SpectrumVisualizer(Visualizer):
     WINDOW_TITLE = 'Spectrum Visualizer'
 
     def setup_analyzer(self, source_name):
-        self._analyzer = FFTAnalyzer(source_name=source_name,
-                                     sample_size=4096)
+        self._analyzer = FFT(source_name=source_name,
+                             sample_size=4096)
 
     def start(self, **kwargs):
         pyglet.clock.schedule_interval(self._window.update, 1 / 10)

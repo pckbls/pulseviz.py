@@ -12,7 +12,7 @@ class WaveformVisualizerWindow(VisualizerWindow):
         self._bin_width = 1.0 / self._analyzer.sample_size
 
     def update(self, dt):
-        with self._analyzer.samples_lock:
+        with self._analyzer.lock:
             self._y_values = self._analyzer.samples / 2.0 + 0.5
 
     def on_draw(self):

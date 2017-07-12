@@ -2,7 +2,7 @@ import numpy
 import pyglet
 from pyglet import gl
 from . import visualizer, Visualizer, VisualizerWindow
-from ..dsp.octave_bands import OctaveBandsAnalayzer
+from ..dsp.octave_bands import OctaveBands
 
 
 class BandsVisualizerWindow(VisualizerWindow):
@@ -13,23 +13,23 @@ class BandsVisualizerWindow(VisualizerWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.y_axis_min = -50
-        self.y_axis_max = 50
+        self.y_axis_min = -70
+        self.y_axis_max = 0
         self.bars_spacing = 0.005
         self.bars_velocity = 0.0
         self.draw_ticks = True
 
-        self._bars_width = (1.0 - (self._analyzer.n() - 1) * self.bars_spacing) / self._analyzer.n()
+        self._bars_width = (1.0 - (self._analyzer.n - 1) * self.bars_spacing) / self._analyzer.n
         self._bars_x_min = None
         self._bars_x_max = None
-        self._bars_height = numpy.zeros(self._analyzer.n())
-        self._ticks_y = numpy.zeros(self._analyzer.n())
+        self._bars_height = numpy.zeros(self._analyzer.n)
+        self._ticks_y = numpy.zeros(self._analyzer.n)
 
     def update(self, dt):
-        with self._analyzer.bands_lock:
-            bars_height = numpy.array(self._analyzer.bands_values)
+        with self._analyzer.lock:
+            bars_height = numpy.array(self._analyzer.values)
 
-        for i in range(0, self._analyzer.n()):
+        for i in range(0, self._analyzer.n):
             y = numpy.clip((bars_height[i] - self.y_axis_min) / (self.y_axis_max - self.y_axis_min), 0.001, 1.0)
 
             if self.bars_velocity > 0.0:
@@ -48,7 +48,7 @@ class BandsVisualizerWindow(VisualizerWindow):
                 self._bars_height[i] = y
 
         # Animate the ticks
-        for i in range(0, self._analyzer.n()):
+        for i in range(0, self._analyzer.n):
             self._ticks_y[i] -= 0.25 * dt
             if self._bars_height[i] > self._ticks_y[i]:
                 self._ticks_y[i] = self._bars_height[i]
@@ -56,7 +56,7 @@ class BandsVisualizerWindow(VisualizerWindow):
     def on_draw(self):
         self.clear()
 
-        for i in range(0, self._analyzer.n()):
+        for i in range(0, self._analyzer.n):
             # TODO: Calculate those in on_resize()
             x_min = (i * self._bars_width + i * self.bars_spacing) * self.width
             x_max = ((i + 1) * self._bars_width + i * self.bars_spacing) * self.width
@@ -88,10 +88,10 @@ class BandsVisualizer(Visualizer):
     WINDOW_TITLE = 'Octave Bands Visualizer'
 
     def setup_analyzer(self, source_name):
-        self._analyzer = OctaveBandsAnalayzer(source_name=source_name,
-                                              sample_size=4096,
-                                              window_function='hanning',
-                                              fraction=3)
+        self._analyzer = OctaveBands(source_name=source_name,
+                                     sample_size=4096,
+                                     window_function='hanning',
+                                     fraction=3)
 
     def start(self, **kwargs):
         pyglet.clock.schedule_interval(self._window.update, 1 / 60)
