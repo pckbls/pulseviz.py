@@ -50,7 +50,7 @@ class PulseAudioException(Exception):
     """
 
     def __init__(self, error_message, error_code):
-        super(PulseAudioException, self).__init__()
+        super().__init__()
         self.error_message = error_message
         self.pulse_error_code = error_code
         self.pulse_error_string = _libpulse_simple.pa_strerror(error_code).decode('ascii')
@@ -172,7 +172,7 @@ class SimpleRecordClient(_SimpleClient):
 
     def __init__(self, target_latency, source=None, **kwargs):
         kwargs['stream_name'] = kwargs.get('stream_name', 'record')
-        super(SimpleRecordClient, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self._sink_source_name = source.encode('ascii') if source is not None else source
 
@@ -216,7 +216,7 @@ class SimplePlaybackClient(_SimpleClient):
 
     def __init__(self, sink=None, **kwargs):
         kwargs['stream_name'] = kwargs.get('stream_name', 'playback')
-        super(SimplePlaybackClient, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self._sink_source_name = sink.encode('ascii') if sink is not None else sink
 
