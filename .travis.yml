@@ -4,7 +4,9 @@ python:
   - "3.6"
 dist: trusty
 sudo: required
-script: pytest -v --benchmark-skip --minimal-pulseaudio-server
+script:
+  - flake8
+  - pytest -v --benchmark-skip --minimal-pulseaudio-server
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq -y psmisc pulseaudio
