@@ -1,9 +1,9 @@
 import threading
 import numpy
-from .fft import FFTAnalyzer
+from .fft import FFT
 
 
-class OctaveBandsAnalayzer(FFTAnalyzer):
+class OctaveBands(FFT):
     """
     Divides the results of the FFT into (second, third, ...) octave bands.
     For each band the results of the FFT are averaged and saved.
@@ -11,18 +11,38 @@ class OctaveBandsAnalayzer(FFTAnalyzer):
     """
 
     def __init__(self, weighting='Z', fraction=1, **kwargs):
+        kwargs['output'] = 'fft'
         super().__init__(**kwargs)
 
-        self.bands_lock = threading.Lock()
-        self.bands_frequencies = self._calculate_octave_bands_frequencies(fraction=fraction)
-        self.bands_values = -numpy.inf * numpy.ones(len(self.bands_frequencies))
-
+        self._bands_lock = threading.Lock()
+        self._bands_frequencies = self._calculate_octave_bands_frequencies(fraction=fraction)
+        self._bands_values = -numpy.inf * numpy.ones(len(self._bands_frequencies))
         self._bands_weights = self._calculate_bands_weighting(weighting)
 
+        self._indices_lower = [0] * len(self._bands_frequencies)
+        self._indices_upper = [0] * len(self._bands_frequencies)
+        for i, (lower, _, upper) in enumerate(self._bands_frequencies):
+            k = self.sample_size / self._pulseaudio_client.sample_frequency
+            self._indices_lower[i] = int(numpy.ceil(lower * k))
+            self._indices_upper[i] = int(numpy.ceil(upper * k))
+
+    @property
+    def lock(self):
+        return self._bands_lock
+
+    @property
     def n(self):
         """Returns the number of bands."""
 
-        return len(self.bands_frequencies)
+        return len(self._bands_frequencies)
+
+    @property
+    def frequencies(self):
+        return self._bands_frequencies
+
+    @property
+    def values(self):
+        return self._bands_values
 
     def _calculate_octave_bands_frequencies(self, fraction=1):
         bands_numbers = numpy.linspace(-6, 4, 11 * fraction)
@@ -38,7 +58,7 @@ class OctaveBandsAnalayzer(FFTAnalyzer):
         return bands_frequencies
 
     def _calculate_bands_weighting(self, weighting):
-        return [self._calculate_weighting_for_frequency(f, weighting) for _, f, _ in self.bands_frequencies]
+        return [self._calculate_weighting_for_frequency(f, weighting) for _, f, _ in self._bands_frequencies]
 
     def _calculate_weighting_for_frequency(self, frequency, weighting):
         if weighting == 'A':
@@ -65,18 +85,21 @@ class OctaveBandsAnalayzer(FFTAnalyzer):
     def _sample(self):
         super()._sample()
 
-        # TODO: Optimize this! m and n for example only need to be calculated once.
-        with self.bands_lock:
-            for i, (lower, _, upper) in enumerate(self.bands_frequencies):
-                k = self.sample_size / self._pulseaudio_client.sample_frequency
-                m = int(numpy.ceil(lower * k))
-                n = int(numpy.ceil(upper * k))
-                self.bands_values[i] = numpy.sum(self.fft[m:n]) / (upper - lower)
+        with self.lock:
+            # TODO: We can probably eliminate all for loops and perform a matrix multiplication instead which would
+            # be really really fast!
+            for i, _ in enumerate(self._bands_frequencies):
+                m = self._indices_lower[i]
+                n = self._indices_upper[i]
 
-            if 0 in self.bands_values:
-                self.bands_values = -numpy.inf * numpy.ones(len(self.bands_frequencies))
+                # TODO: Is the way we calculate the octave band magnitutes really correct? :/
+                # self.bands_values[i] = numpy.sum(self.fft[m:n]) / (upper - lower)
+                self._bands_values[i] = numpy.average(super().values[m:n])
+
+            if 0 in self._bands_values:
+                self._bands_values[:] = -numpy.inf * numpy.ones(len(self._bands_frequencies))
             else:
-                self.bands_values = 20 * numpy.log10(self.bands_values)
+                self._bands_values[:] = 20 * numpy.log10(self._bands_values)
 
-            for i, _ in enumerate(self.bands_frequencies):
-                self.bands_values[i] += self._bands_weights[i]
+            for i, _ in enumerate(self._bands_frequencies):
+                self._bands_values[i] += self._bands_weights[i]
