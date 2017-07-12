@@ -30,6 +30,18 @@ def test_octave_bands_center_frequencies():
     numpy.testing.assert_allclose(reference_center_frequencies, center_frequencies, 1)
 
 
+def test_frequency_bins_do_not_overlap():
+    analyzer = OctaveBands(sample_size=2048,
+                           source_name='foobar',
+                           stream_name='pulseviz-tests')
+
+    a, b = 0, 0
+    for lower, upper in zip(analyzer._indices_lower, analyzer._indices_upper):
+        if lower <= a or upper <= b:
+            raise Exception('Frequency bins overlap!')
+        a, b = lower, upper
+
+
 def test_A_weighting():
     analyzer = OctaveBands(sample_size=2048,
                            fraction=1,
