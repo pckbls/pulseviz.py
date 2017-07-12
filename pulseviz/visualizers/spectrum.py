@@ -84,4 +84,3 @@ class SpectrumVisualizer(Visualizer):
     def start(self, **kwargs):
         pyglet.clock.schedule_interval(self._window.update, 1 / 10)
         super().start(**kwargs)
-

@@ -43,4 +43,3 @@ def test_benchmark(fixture_fake_simple_client, benchmark, window_function, outpu
     analyzer._pulseaudio_client.connect()
     benchmark(benchmark_func)
     analyzer._pulseaudio_client.disconnect()
-
