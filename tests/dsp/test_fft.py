@@ -1,16 +1,16 @@
 import time
 import pytest
-from pulseviz.dsp.fft import FFTAnalyzer
+from pulseviz.dsp.fft import FFT
 
 
 @pytest.mark.parametrize('window_function', [None, 'hanning'])
-def test_analyze(fixture_null_sink, fixture_audio_playback, window_function):
-    sink_name, source_name = fixture_null_sink
-
-    analyzer = FFTAnalyzer(sample_size=2048,
-                           window_function=window_function,
-                           source_name=source_name,
-                           stream_name='pulseviz-tests')
+@pytest.mark.parametrize('output', ['fft', 'psd'])
+def test_analyze(fixture_fake_simple_client, window_function, output):
+    analyzer = FFT(sample_size=2048,
+                   window_function=window_function,
+                   output=output,
+                   source_name='foobar',
+                   stream_name='pulseviz-tests')
 
     with analyzer:
         time.sleep(1.0)

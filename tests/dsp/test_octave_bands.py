@@ -1,19 +1,17 @@
 import time
 import pytest
 import numpy.testing
-from pulseviz.dsp.octave_bands import OctaveBandsAnalayzer
+from pulseviz.dsp.octave_bands import OctaveBands
 
 
 @pytest.mark.parametrize('fraction', [1, 2, 3])
 @pytest.mark.parametrize('weighting', ['A', 'C', 'Z'])
-def test_analyze(fixture_null_sink, fixture_audio_playback, fraction, weighting):
-    sink_name, source_name = fixture_null_sink
-
-    analyzer = OctaveBandsAnalayzer(sample_size=2048,
-                                    fraction=fraction,
-                                    weighting=weighting,
-                                    source_name=source_name,
-                                    stream_name='pulseviz-tests')
+def test_analyze(fixture_fake_simple_client, fraction, weighting):
+    analyzer = OctaveBands(sample_size=2048,
+                           fraction=fraction,
+                           weighting=weighting,
+                           source_name='foobar',
+                           stream_name='pulseviz-tests')
 
     with analyzer:
         time.sleep(1.0)
@@ -22,21 +20,21 @@ def test_analyze(fixture_null_sink, fixture_audio_playback, fraction, weighting)
 
 
 def test_octave_bands_center_frequencies():
-    analyzer = OctaveBandsAnalayzer(sample_size=44100,
-                                    fraction=1,
-                                    source_name='whatever')
+    analyzer = OctaveBands(sample_size=44100,
+                           fraction=1,
+                           source_name='whatever')
 
     # Reference values taken from: http://www.engineeringtoolbox.com/octave-bands-frequency-limits-d_1602.html
     reference_center_frequencies = [16.0, 31.5, 63.0, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0, 16000.0]
-    center_frequencies = [center for _, center, _ in analyzer.bands_frequencies]
+    center_frequencies = [center for _, center, _ in analyzer.frequencies]
     numpy.testing.assert_allclose(reference_center_frequencies, center_frequencies, 1)
 
 
 def test_A_weighting():
-    analyzer = OctaveBandsAnalayzer(sample_size=2048,
-                                    fraction=1,
-                                    weighting='A',
-                                    source_name='whatever')
+    analyzer = OctaveBands(sample_size=2048,
+                           fraction=1,
+                           weighting='A',
+                           source_name='whatever')
 
     # Reference values taken from: https://www.vernier.com/til/3500/
     frequencies = [31.5, 63.0, 125.0, 250.0, 500.0, 1000.0, 2000.0, 4000.0, 8000.0]
@@ -52,10 +50,10 @@ def test_C_weighting():
 
 
 def test_Z_weighting():
-    analyzer = OctaveBandsAnalayzer(sample_size=2048,
-                                    fraction=1,
-                                    weighting='Z',
-                                    source_name='pulseviz-tests')
+    analyzer = OctaveBands(sample_size=2048,
+                           fraction=1,
+                           weighting='Z',
+                           source_name='pulseviz-tests')
 
     assert analyzer._calculate_weighting_for_frequency(0.0, 'Z') == 1.0
     assert analyzer._calculate_weighting_for_frequency(1337.0, 'Z') == 1.0
