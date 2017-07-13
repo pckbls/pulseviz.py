@@ -1,4 +1,5 @@
 import sys
+import pyglet
 from .pulseaudio import pacmd
 from . import visualizers
 
@@ -36,5 +37,9 @@ def main():
     if visualizer_type is None:
         print_help()
 
-    window = visualizer_type(source_name=source)
+    def stop():
+        pyglet.app.exit()
+
+    window = visualizer_type(source_name=source, stop_callback=stop)
     window.start()
+    pyglet.app.run()

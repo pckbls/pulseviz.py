@@ -48,7 +48,8 @@ class Visualizer(object):
     VISUALIZER_WINDOW_TYPE = VisualizerWindow
     WINDOW_TITLE = '(N/A)'
 
-    def __init__(self, source_name):
+    def __init__(self, source_name, stop_callback):
+        self._stop_callback = stop_callback
         self._analyzer = None
         self.setup_analyzer(source_name)
         self._window = self.VISUALIZER_WINDOW_TYPE(visualizer=self,
@@ -59,12 +60,12 @@ class Visualizer(object):
         pass
 
     def start(self):
-        assert isinstance(self._analyzer, PulseAudioSignalAnalayzer)
-        assert isinstance(self._window, VisualizerWindow)
+        # TODO: assert statements will be removed during optimization phase!
+        assert isinstance(self._analyzer, PulseAudioSignalAnalayzer)  # TODO: See above ^
+        assert isinstance(self._window, VisualizerWindow)  # TODO: See above ^
         self._analyzer.start()
-        pyglet.app.run()
 
     def stop(self):
-        pyglet.app.exit()
         self._analyzer.stop()
         self._analyzer.join()
+        self._stop_callback()
