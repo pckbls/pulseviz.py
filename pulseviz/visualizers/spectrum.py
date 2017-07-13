@@ -79,8 +79,9 @@ class SpectrumVisualizer(Visualizer):
 
     def setup_analyzer(self, source_name):
         self._analyzer = FFT(source_name=source_name,
-                             sample_size=4096)
+                             window_function='hanning',
+                             sample_size=1024)
 
     def start(self, **kwargs):
-        pyglet.clock.schedule_interval(self._window.update, 1 / 10)
+        pyglet.clock.schedule_interval(self._window.update, 1 / 60)
         super().start(**kwargs)
