@@ -2,6 +2,7 @@ import pytest
 
 
 class FakeLibPulseSimple(object):
+    # TODO: Add function that allows to inject some data that will be returned by pa_simple_read.
 
     def pa_usec_to_bytes(a, b):
         return 1337

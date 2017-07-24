@@ -1,40 +1,42 @@
-import time
 import pytest
 from pulseviz.dsp.fft import FFT
 
 
-@pytest.mark.parametrize('window_function', [None, 'hanning'])
+@pytest.fixture
+def fixture_fft(fixture_fake_simple_client, request):
+    return {
+        'source_name': 'foobar',
+        'stream_name': 'pulseviz-tests',
+        'sample_size': 1024,
+        'buffer_size': 1024
+    }
+
+
+@pytest.mark.parametrize('sample_size', [512])
+@pytest.mark.parametrize('buffer_size', [512, 1024])
+@pytest.mark.parametrize('window_function', ['rectangle', 'hanning'])
 @pytest.mark.parametrize('output', ['fft', 'psd'])
-def test_analyze(fixture_fake_simple_client, window_function, output):
-    analyzer = FFT(sample_size=2048,
-                   window_function=window_function,
-                   output=output,
-                   source_name='foobar',
-                   stream_name='pulseviz-tests')
-
+@pytest.mark.parametrize('scaling', ['lin', 'log'])
+def test_analyze(fixture_fft, sample_size, buffer_size, window_function, output, scaling):
+    fixture_fft['sample_size'] = sample_size
+    fixture_fft['buffer_size'] = buffer_size
+    fixture_fft['window_function'] = window_function
+    fixture_fft['output'] = output
+    fixture_fft['scaling'] = scaling
+    analyzer = FFT(**fixture_fft)
     with analyzer:
-        time.sleep(1.0)
-
+        pass
     assert analyzer.exit_success
 
 
-def test_frequencies_and_psd_length():
-    analyzer = FFT(sample_size=2048,
-                   source_name='foobar',
-                   stream_name='pulseviz-tests')
-
+def test_frequencies_and_psd_length(fixture_fft):
+    analyzer = FFT(**fixture_fft)
     assert analyzer.frequencies[0] == 0.0
     assert len(analyzer.frequencies) == len(analyzer.values)
 
 
-@pytest.mark.parametrize('window_function', [None, 'hanning'])
-@pytest.mark.parametrize('output', ['fft', 'psd'])
-def test_benchmark(fixture_fake_simple_client, benchmark, window_function, output):
-    analyzer = FFT(sample_size=2048,
-                   window_function=window_function,
-                   output=output,
-                   source_name='foobar',
-                   stream_name='pulseviz-tests')
+def test_benchmark(fixture_fft, benchmark):
+    analyzer = FFT(**fixture_fft)
 
     def benchmark_func():
         for _ in range(0, 1000):
