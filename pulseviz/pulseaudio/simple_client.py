@@ -66,7 +66,7 @@ class _SimpleClient:
 
     def __init__(self,
                  sample_frequency, sample_format, channels,
-                 name='pulseviz.py', stream_name='none'):
+                 name='pulseviz', stream_name='none'):
         if not isinstance(sample_format, SampleFormat):
             raise SimpleClientException('sample_format must be a member of SampleFormat.')
 
