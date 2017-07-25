@@ -1,3 +1,4 @@
+import os
 import sys
 import pyglet
 from .pulseaudio import pacmd
@@ -11,7 +12,7 @@ from .visualizers import bands  # noqa
 
 
 def print_help():
-    print('Usage: {0} <source> <visualizer>'.format(sys.argv[0]))
+    print('Usage: {0} <source> <visualizer>'.format(os.path.basename(sys.argv[0])))
 
     print('\nAvailable sources:')
     for source in pacmd.list_sources():
