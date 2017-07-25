@@ -1,0 +1,2 @@
+class PulsevizException(Exception):
+    pass
