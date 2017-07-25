@@ -10,7 +10,7 @@ class BandsVisualizerWindow(VisualizerWindow):
     # Use a shader for rendering and offload some of the calculations into it, this should yield a big
     # performance improvement.
 
-    def __init__(self, **kwargs):
+    def __init__(self, analyzer, **kwargs):
         super().__init__(**kwargs)
 
         self.y_axis_min = -70
@@ -19,6 +19,7 @@ class BandsVisualizerWindow(VisualizerWindow):
         self.bars_velocity = 0.0
         self.draw_ticks = True
 
+        self._analyzer = analyzer
         self._bars_width = (1.0 - (self._analyzer.n - 1) * self.bars_spacing) / self._analyzer.n
         self._bars_x_min = None
         self._bars_x_max = None
@@ -84,14 +85,17 @@ class BandsVisualizerWindow(VisualizerWindow):
 
 @visualizer(name='bands')
 class BandsVisualizer(Visualizer):
+    ANALYZER_TYPE = OctaveBands
     VISUALIZER_WINDOW_TYPE = BandsVisualizerWindow
     WINDOW_TITLE = 'Octave Bands Visualizer'
 
-    def setup_analyzer(self, source_name):
-        self._analyzer = OctaveBands(source_name=source_name,
-                                     sample_size=4096,
-                                     window_function='hanning',
-                                     fraction=3)
+    def _setup_analyzer(self):
+        self._analyzer_kwargs['sample_size'] = 256
+        self._analyzer_kwargs['buffer_size'] = 8192
+        self._analyzer_kwargs['window_function'] = 'hanning'
+        self._analyzer_kwargs['weighting'] = 'Z'
+        self._analyzer_kwargs['fraction'] = 3
+        super()._setup_analyzer()
 
     def start(self, **kwargs):
         pyglet.clock.schedule_interval(self._window.update, 1 / 60)
