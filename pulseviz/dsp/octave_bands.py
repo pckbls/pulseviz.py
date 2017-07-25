@@ -1,6 +1,7 @@
 import threading
 import numpy
 from .fft import FFT
+from .. import PulsevizException
 
 
 class OctaveBands(FFT):
@@ -11,20 +12,15 @@ class OctaveBands(FFT):
     """
 
     def __init__(self, weighting='Z', fraction=1, **kwargs):
-        kwargs['output'] = 'fft'
+        kwargs['output'] = 'psd'
+        kwargs['scaling'] = 'log'
         super().__init__(**kwargs)
 
         self._bands_lock = threading.Lock()
         self._bands_frequencies = self._calculate_octave_bands_frequencies(fraction=fraction)
         self._bands_values = -numpy.inf * numpy.ones(len(self._bands_frequencies))
         self._bands_weights = self._calculate_bands_weighting(weighting)
-
-        self._indices_lower = [0] * len(self._bands_frequencies)
-        self._indices_upper = [0] * len(self._bands_frequencies)
-        for i, (lower, _, upper) in enumerate(self._bands_frequencies):
-            k = self.sample_size / self._pulseaudio_client.sample_frequency
-            self._indices_lower[i] = int(numpy.ceil(lower * k))
-            self._indices_upper[i] = int(numpy.ceil(upper * k))
+        self._indices_lower, self._indices_upper = self._calculate_fft_indices()
 
     @property
     def lock(self):
@@ -44,13 +40,31 @@ class OctaveBands(FFT):
     def values(self):
         return self._bands_values
 
+    def _calculate_fft_indices(self):
+        indices_lower = [0] * len(self._bands_frequencies)
+        indices_upper = [0] * len(self._bands_frequencies)
+        for i, (lower, _, upper) in enumerate(self._bands_frequencies):
+            k = self.buffer_size / self._pulseaudio_client.sample_frequency
+            indices_lower[i] = int(numpy.ceil(lower * k))
+            indices_upper[i] = int(numpy.ceil(upper * k))
+
+        for lower, upper in zip(indices_lower, indices_upper):
+            if lower == upper:
+                raise PulsevizException('FFT resolution too low for selected fraction. '
+                                        'Either increase buffer_size or choose a lower fraction.')
+
+        return indices_lower, indices_upper
+
     def _calculate_octave_bands_frequencies(self, fraction=1):
         bands_numbers = numpy.linspace(-6, 4, 11 * fraction)
         center_frequencies = numpy.power(10.0, 3) * numpy.power(2.0, bands_numbers)
         bands_frequencies = []
 
         for center in center_frequencies:
-            fd = numpy.power(2, 1 / 2)
+            # Sources:
+            # * https://en.wikipedia.org/wiki/Octave_band
+            # * http://www.sengpielaudio.com/calculator-octave.htm
+            fd = numpy.power(2.0, 1.0 / (2.0 * fraction))
             lower = center / fd
             upper = center * fd
             bands_frequencies.append((lower, center, upper))
@@ -88,18 +102,13 @@ class OctaveBands(FFT):
         with self.lock:
             # TODO: We can probably eliminate all for loops and perform a matrix multiplication instead which would
             # be really really fast!
-            for i, _ in enumerate(self._bands_frequencies):
+            for i, (lower, _, upper) in enumerate(self._bands_frequencies):
                 m = self._indices_lower[i]
                 n = self._indices_upper[i]
 
                 # TODO: Is the way we calculate the octave band magnitutes really correct? :/
-                # self.bands_values[i] = numpy.sum(self.fft[m:n]) / (upper - lower)
+                # self._bands_values[i] = numpy.sum(super().values[m:n]) / (upper - lower)
                 self._bands_values[i] = numpy.average(super().values[m:n])
-
-            if 0 in self._bands_values:
-                self._bands_values[:] = -numpy.inf * numpy.ones(len(self._bands_frequencies))
-            else:
-                self._bands_values[:] = 20 * numpy.log10(self._bands_values)
 
             for i, _ in enumerate(self._bands_frequencies):
                 self._bands_values[i] += self._bands_weights[i]
