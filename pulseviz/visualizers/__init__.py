@@ -15,13 +15,12 @@ def visualizer(name):
 
 
 class VisualizerWindow(pyglet.window.Window):
-    def __init__(self, visualizer, **kwargs):
+    def __init__(self, visualizer, analyzer=None, **kwargs):
         super().__init__(**kwargs)
 
         self.debug_overlay = False
 
         self._visualizer = visualizer
-        self._analyzer = self._visualizer._analyzer  # TODO: We access a private variable here
         self._fps_display = pyglet.window.FPSDisplay(self)
 
     def on_draw(self):
@@ -45,24 +44,35 @@ class VisualizerWindow(pyglet.window.Window):
 
 
 class Visualizer(object):
+    ANALYZER_TYPE = PulseAudioSignalAnalayzer
     VISUALIZER_WINDOW_TYPE = VisualizerWindow
     WINDOW_TITLE = '(N/A)'
 
     def __init__(self, source_name, stop_callback):
         self._stop_callback = stop_callback
-        self._analyzer = None
-        self.setup_analyzer(source_name)
-        self._window = self.VISUALIZER_WINDOW_TYPE(visualizer=self,
-                                                   resizable=True,
-                                                   caption=self.WINDOW_TITLE + ' - pulseviz.py')
 
-    def setup_analyzer(self, source_name):
-        pass
+        self._analyzer_kwargs = {
+            'source_name': source_name
+        }
+        self._analyzer = None
+        self._setup_analyzer()
+
+        self._window_kwargs = {
+            'visualizer': self,
+            'resizable': True,
+            'caption': self.WINDOW_TITLE + ' - pulseviz'
+        }
+        self._window = None
+        self._setup_window()
+
+    def _setup_analyzer(self):
+        self._analyzer = self.ANALYZER_TYPE(**self._analyzer_kwargs)
+
+    def _setup_window(self):
+        self._window_kwargs['analyzer'] = self._analyzer
+        self._window = self.VISUALIZER_WINDOW_TYPE(**self._window_kwargs)
 
     def start(self):
-        # TODO: assert statements will be removed during optimization phase!
-        assert isinstance(self._analyzer, PulseAudioSignalAnalayzer)  # TODO: See above ^
-        assert isinstance(self._window, VisualizerWindow)  # TODO: See above ^
         self._analyzer.start()
 
     def stop(self):
