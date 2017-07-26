@@ -5,23 +5,25 @@ Right now it's more or less a proof of concept with little to no features.
 
 ![Draft](images/draft_animated.gif)
 
-# Dependencies
+# Installation
 
-A recent version of Python 3 (3.5 and above), `pyglet`, `numpy` and (of course) PulseAudio are required.
-Both `pyglet` and `numpy` should be part of the official repositories for all major Linux distributions.
-Alternatively they can be installed via `pip3`:
+pulseviz can be installed via `pip3`:
 
 ```sh
-pip3 install -r requirements.txt
+# System wide...
+sudo pip3 install git+https://github.com/pckbls/pulseviz.git
+
+# ...or only for the current user
+pip3 install --user git+https://github.com/pckbls/pulseviz.git
 ```
 
-# How to use
+# Usage
 
-pulseviz requires you to choose from an audio source and a visualizer type:
+pulseviz requires you to choose an audio source and a visualizer type:
 
 ```
-$ ./pulseviz.py
-Usage: ./pulseviz.py <source> <visualizer>
+$ pulseviz
+Usage: pulseviz <source> <visualizer>
 
 Available sources:
     alsa_output.pci-0000_00_1b.0.analog-stereo.monitor
