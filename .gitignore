@@ -105,8 +105,10 @@ ENV/
 # VIM swap files
 *.swp
 
-# pytest-profiling output
+# pytest-profiling and kernprof output
 prof/
+*.prof
+*.lprof
 
 # Unsorted directory for some stuff
 unsorted/
