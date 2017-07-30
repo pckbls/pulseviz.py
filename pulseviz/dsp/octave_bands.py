@@ -45,8 +45,12 @@ class OctaveBands(FFT):
         indices_upper = [0] * len(self._bands_frequencies)
         for i, (lower, _, upper) in enumerate(self._bands_frequencies):
             k = self.buffer_size / self._pulseaudio_client.sample_frequency
-            indices_lower[i] = int(numpy.ceil(lower * k))
-            indices_upper[i] = int(numpy.ceil(upper * k))
+            max_upper_index = len(super().frequencies) - 1
+            indices_lower[i] = int(numpy.clip(numpy.ceil(lower * k), 0, max_upper_index))
+            indices_upper[i] = int(numpy.clip(numpy.ceil(upper * k), 0, max_upper_index))
+
+            if not 0 <= indices_lower[i] <= max_upper_index or not 0 <= indices_upper[i] <= max_upper_index:
+                raise PulsevizException('Calculated indices are not valid. This should not happen.')
 
         for lower, upper in zip(indices_lower, indices_upper):
             if lower == upper:
