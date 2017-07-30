@@ -100,15 +100,20 @@ class OctaveBands(FFT):
         super()._sample()
 
         with self.lock:
+            # For each band we have to calculate the average magnitude for all frequencies that
+            # are part of that band. For some odd reason numpy.mean() is _VERY_ slow!
+            # numpy.cumsum() on the other hand is blazingly fast.
+            fft_cumsum = numpy.cumsum(super().values)
+
             # TODO: We can probably eliminate all for loops and perform a matrix multiplication instead which would
             # be really really fast!
             for i, (lower, _, upper) in enumerate(self._bands_frequencies):
                 m = self._indices_lower[i]
                 n = self._indices_upper[i]
-
-                # TODO: Is the way we calculate the octave band magnitutes really correct? :/
-                # self._bands_values[i] = numpy.sum(super().values[m:n]) / (upper - lower)
-                self._bands_values[i] = numpy.average(super().values[m:n])
+                if fft_cumsum[n] == -numpy.inf or fft_cumsum[m] == -numpy.inf:
+                    self._bands_values[i] = -numpy.inf
+                else:
+                    self._bands_values[i] = (fft_cumsum[n] - fft_cumsum[m]) / (n - m)
 
             for i, _ in enumerate(self._bands_frequencies):
                 self._bands_values[i] += self._bands_weights[i]
