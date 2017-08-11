@@ -1,2 +1,5 @@
 pyglet
 numpy
+pytest
+pytest-benchmark
+flake8
