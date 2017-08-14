@@ -22,10 +22,10 @@ class SpectrumVisualizerWindow(VisualizerWindow):
         self._x_lim = (10, self._frequencies[-1])
 
         self._x_coordinates = numpy.array([
-            (numpy.log10(freq) - numpy.log10(self._x_lim[0]))
-            / (numpy.log10(self._x_lim[1]) - numpy.log10(self._x_lim[0]))
+            (numpy.log10(freq + 1) - numpy.log10(self._x_lim[0]))
+            / (numpy.log10(self._x_lim[1] + 1) - numpy.log10(self._x_lim[0]))
             for freq in self._frequencies
-        ])  # TODO: Add +1?
+        ])
 
     def on_sample(self):
         with self._lock:
