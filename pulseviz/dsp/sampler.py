@@ -1,4 +1,3 @@
-import threading
 import numpy
 from . import PulseAudioSignalAnalayzer
 from .. import PulsevizException
@@ -13,27 +12,19 @@ class Sampler(PulseAudioSignalAnalayzer):
     def __init__(self, sample_size, buffer_size=None, **kwargs):
         super().__init__(**kwargs)
 
-        self._samples_lock = threading.Lock()
-        self._samples = numpy.zeros(sample_size, dtype='f')
+        self._samples = self._pulseaudio_client.create_buffer(size=sample_size)
 
         if buffer_size is None:
-            self._buffer = None
-        elif buffer_size >= sample_size:
+            buffer_size = sample_size
+
+        if buffer_size >= sample_size:
             self._buffer = numpy.zeros(buffer_size, dtype='f')
         else:
             raise PulsevizException('buffer_size is too small: {0} < {1}'.format(buffer_size, sample_size))
 
     @property
-    def lock(self):
-        return self._samples_lock
-
-    @property
     def sample_size(self):
         return len(self._samples)
-
-    @property
-    def samples(self):
-        return self._samples
 
     @property
     def buffer(self):
@@ -50,11 +41,9 @@ class Sampler(PulseAudioSignalAnalayzer):
         return len(self._buffer)
 
     def _sample(self):
-        samples = self._pulseaudio_client.read(size=self.sample_size)
-        with self.lock:
-            self._samples[:] = samples
+        self._pulseaudio_client.read_into_buffer(self._samples)
 
-            if self._buffer is not None:
-                n = self.buffer_size - self.sample_size
-                self._buffer[0:n] = self._buffer[self.sample_size:]
-                self._buffer[n:] = samples
+        if self._buffer is not None:
+            n = self.buffer_size - self.sample_size
+            self._buffer[0:n] = self._buffer[self.sample_size:]
+            self._buffer[n:] = self._samples
