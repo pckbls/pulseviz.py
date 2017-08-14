@@ -8,8 +8,8 @@ import sys
 import os
 import signal
 import subprocess
-import threading
 import random
+import threading
 import numpy
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/..')
@@ -17,9 +17,10 @@ from pulseviz.pulseaudio.simple_client import SimplePlaybackClient, SampleFormat
 
 
 def sine_generator(sample_frequency):
+    # TODO: Use real time!
     t = 0.0
     while True:
-        yield numpy.sin(t)
+        yield numpy.sin((0.0001*t)/(2*numpy.pi) * t)
         t += 0.05
 
 
