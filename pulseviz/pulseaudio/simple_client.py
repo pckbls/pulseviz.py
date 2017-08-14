@@ -91,6 +91,7 @@ class _SimpleClient:
         self.disconnect()
 
     def _fail_if_not_connected(self):
+        # TODO: This can be converted into a function decorator.
         if not self.is_connected():
             raise SimpleClientException('No connection has been established yet or is already closed.')
 
@@ -162,6 +163,21 @@ class _SimpleClient:
         if result < 0:
             raise PulseAudioException('Could not flush data.', error.value)
 
+    def create_buffer(self, size):
+        """Creates a buffer that can hold `size` samples of the specified sample format."""
+
+        # TODO: Use a dict instead of the big if/else block?
+        if self._sample_format == SampleFormat.PA_SAMPLE_U8:
+            data = (ctypes.c_uint8 * size)()
+        elif self._sample_format == SampleFormat.PA_SAMPLE_S16LE:
+            raise Exception('Not implemented yet.')
+        elif self._sample_format == SampleFormat.PA_SAMPLE_FLOAT32LE:
+            # TODO: There's no guarantee that c_float is in little endian byte order.
+            # We should wrap it into a LittleEndianStructure and access it in there.
+            data = (ctypes.c_float * size)()
+
+        return data
+
 
 class SimpleRecordClient(_SimpleClient):
     """
@@ -183,27 +199,24 @@ class SimpleRecordClient(_SimpleClient):
                                                     minreq=-1,
                                                     fragsize=fragsize)
 
-    def read(self, size):
-        """Reads `size` samples from the PulseAudio server using the specified SampleSpec format."""
+    def read_into_buffer(self, data):
+        """Reads data from the PulseAudio server into the specified buffer."""
 
         self._fail_if_not_connected()
 
-        if self._sample_format == SampleFormat.PA_SAMPLE_U8:
-            data = (ctypes.c_uint8 * size)()
-            size_ = size
-        elif self._sample_format == SampleFormat.PA_SAMPLE_S16LE:
-            raise Exception('Not implemented yet.')
-        elif self._sample_format == SampleFormat.PA_SAMPLE_FLOAT32LE:
-            # TODO: There's no guarantee that c_float is in little endian byte order.
-            # We should wrap it into a LittleEndianStructure and access it in there.
-            data = (ctypes.c_float * size)()
-            size_ = size * 4
-
         error = ctypes.c_int(0)
-        result = _libpulse_simple.pa_simple_read(self._client, data, size_, error)
+        result = _libpulse_simple.pa_simple_read(self._client, data, ctypes.sizeof(data), error)
         if result < 0:
             raise PulseAudioException('Could not read data.', error.value)
 
+    def read(self, size):
+        """
+        Reads `size` samples from the PulseAudio server using the specified SampleSpec format
+        and returns them.
+        """
+
+        data = self.create_buffer(size)
+        self.read_into_buffer(data)
         return data
 
 
@@ -225,6 +238,7 @@ class SimplePlaybackClient(_SimpleClient):
 
         self._fail_if_not_connected()
 
+        # TODO: Use self.create_data_array...
         if self._sample_format == SampleFormat.PA_SAMPLE_U8:
             size = len(data)
             c_data = (ctypes.c_uint8 * size)(*data)
