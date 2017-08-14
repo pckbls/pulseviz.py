@@ -10,7 +10,7 @@ def start():
         subprocess.run([
             'pulseaudio',
             '-n',
-            '-F', 'tests/data/minimal_server.pa',
+            '-F', 'tests/pulseaudio/data/minimal_server.pa',
             '--exit-idle-time', '1337',
             '--start',
             '-vvvv'

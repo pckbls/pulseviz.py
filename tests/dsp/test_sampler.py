@@ -27,13 +27,13 @@ def test_analyze(fixture_sampler, sample_frequency, sample_size, buffer_size):
 
 def test_buffer_size(fixture_sampler):
     analyzer = Sampler(sample_size=1024, buffer_size=None, **fixture_sampler)
-    with pytest.raises(PulsevizException): analyzer.buffer_size  # noqa
-    with pytest.raises(PulsevizException): analyzer.buffer  # noqa
+    assert analyzer.buffer_size == analyzer.sample_size
 
     with pytest.raises(PulsevizException):
         analyzer = Sampler(sample_size=1024, buffer_size=1023, **fixture_sampler)
 
     analyzer = Sampler(sample_size=1024, buffer_size=1025, **fixture_sampler)
+    assert analyzer.sample_size == 1024
     assert analyzer.buffer_size == 1025
 
 
