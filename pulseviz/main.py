@@ -39,7 +39,11 @@ def main():
         print_help()
 
     def stop():
+        print('Stopping...')
         pyglet.app.exit()
+
+    print('Using {0} as audio source.'.format(source))
+    print('You can press the [h] key to show a help text.')
 
     window = visualizer_type(source_name=source, stop_callback=stop)
     window.start()
