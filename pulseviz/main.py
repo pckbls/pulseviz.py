@@ -9,6 +9,7 @@ from . import visualizers
 from .visualizers import waveform  # noqa
 from .visualizers import spectrum  # noqa
 from .visualizers import bands  # noqa
+from .visualizers import shadertoy  # noqa
 
 
 def print_help():

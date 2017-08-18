@@ -25,7 +25,8 @@ class ShaderCompileException(ShaderException):
         self._shader_log = buffer.value.decode('ascii')
 
     def __str__(self):
-        return self._shader_log
+        # TODO: Print shader source
+        return 'FOOBAR\n' + self._shader_log
 
 
 class ShaderLinkException(ShaderException):
