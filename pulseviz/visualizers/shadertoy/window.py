@@ -1,19 +1,14 @@
-import threading
-import requests
 import pyglet
 from pyglet import gl
-import numpy
-from . import visualizer, Visualizer, VisualizerWindow
-from ..dsp.sampler import Sampler
-from .. import shader
-
-
-API_KEY = 'TODO'
+from .. import VisualizerWindow
+from ... import shader
 
 
 class ShadertoyVisualizerWindow(VisualizerWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self._time = 0.0
 
         with open('pulseviz/shader/shadertoy/vertex_main.glsl') as f:
             vertex_shader_source = f.read()
@@ -42,7 +37,7 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
         pass
 
     def on_update(self, dt):
-        pass
+        self._time += dt
 
     def on_draw_(self):
         if False:
@@ -65,7 +60,7 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
 
             gl.glUniform1f(
                 gl.glGetUniformLocation(self._shader._program_handle, b'iTime'),
-                1337.0
+                self._time
             )
 
             gl.glUniform2f(
@@ -92,25 +87,3 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
                     -1.0, 1.0 * self.height
                 ])
             )
-
-
-@visualizer(name='shadertoy')
-class WaveformVisualizer(Visualizer):
-    ANALYZER_TYPE = Sampler
-    VISUALIZER_WINDOW_TYPE = ShadertoyVisualizerWindow
-    WINDOW_TITLE = 'Shadertoy Visualizer'
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def _setup_analyzer(self):
-        self._analyzer_kwargs['sample_size'] = 512
-        super()._setup_analyzer()
-
-    def _setup_window(self):
-        super()._setup_window()
-
-    def start(self, **kwargs):
-        self._analyzer.on_sample(self._window.on_sample)
-        pyglet.clock.schedule_interval(self._window.on_update, 1 / 10)
-        super().start(**kwargs)
