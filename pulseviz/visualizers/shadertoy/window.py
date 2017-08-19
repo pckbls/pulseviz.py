@@ -1,12 +1,21 @@
+import threading
+import numpy
 import pyglet
 from pyglet import gl
 from .. import VisualizerWindow
-from ... import shader
+from ... import shader, texture
 
 
 class ShadertoyVisualizerWindow(VisualizerWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self._samples_n = self._analyzer.buffer_size
+        self._vertex_list = pyglet.graphics.vertex_list(
+            self._samples_n,
+            ('v2f/dynamic', numpy.zeros(self._samples_n * 2))
+        )
+        self._lock = threading.Lock()
 
         self._time = 0.0
 
@@ -32,12 +41,21 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
 
         self._image = pyglet.image.load('images/bands.png')
         self._texture = self._image.get_texture()
+        self._texture_foo_bar = texture.TextureFrameBuffer(self._texture)
 
     def on_sample(self):
-        pass
+        with self._lock:
+            bin_width = 1.0 / self._samples_n
+            self._vertex_list.vertices[0::2] = numpy.arange(0, self._samples_n) * bin_width * self._image.width
+            self._vertex_list.vertices[1::2] = (self._analyzer.buffer / 2.0 + 0.5) * self._image.height * 0.5
 
     def on_update(self, dt):
         self._time += dt
+
+        with self._texture_foo_bar, self._lock:
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+            gl.glColor3f(0.25, 0.0, 1.0)
+            self._vertex_list.draw(pyglet.gl.GL_LINE_STRIP)
 
     def on_draw_(self):
         if False:

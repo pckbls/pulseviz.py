@@ -39,6 +39,5 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 }
 
 void main() {
-    // mainImage(glFragColor, gl_FragCoord.xy + ifFragCoordOffsetUniform );
-    glFragColor = vec4(1.0, 0.0, 1.0, 1.0);
+    mainImage(glFragColor, gl_FragCoord.xy + ifFragCoordOffsetUniform );
 }
