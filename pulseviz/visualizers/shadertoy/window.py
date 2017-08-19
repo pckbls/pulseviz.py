@@ -20,7 +20,8 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
         self._samples_n = self._analyzer.buffer_size
         self._vertex_list = pyglet.graphics.vertex_list(
             self._samples_n,
-            ('v2f/dynamic', numpy.zeros(self._samples_n * 2))
+            ('v2f/dynamic', numpy.zeros(self._samples_n * 2)),
+            ('c3f/dynamic', numpy.ones(self._samples_n * 3)),
         )
         self._lock = threading.Lock()
 
@@ -29,7 +30,7 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
         with open('pulseviz/shader/shadertoy/vertex_main.glsl') as f:
             vertex_shader_source = f.read()
 
-        with open('pulseviz/shader/AudioSurf.glsl') as f:
+        with open('pulseviz/shader/InputSound.glsl') as f:
             fragment_shader_source = f.read()
 
         self._shader = shader.Shader(
@@ -55,20 +56,23 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
         with self._lock:
             bin_width = 1.0 / self._samples_n
             self._vertex_list.vertices[0::2] = numpy.arange(0, self._samples_n) * bin_width * self._image.width
-            # self._vertex_list.vertices[1::2] = (self._analyzer.buffer / 2.0 + 0.5) * self._image.height * 0.5
-            self._vertex_list.vertices[1::2] = numpy.ones(self._samples_n)
+            self._vertex_list.vertices[1::2] = 2.0 * numpy.ones(self._samples_n)
+            self._vertex_list.colors[0::3] = (self._analyzer.buffer / 2.0 + 0.5)
 
     def on_update(self, dt):
         self._time += dt
 
         with self._texture_foo_bar, self._lock:
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-            gl.glBegin(gl.GL_LINE_STRIP)
-            for x, y in zip(self._vertex_list.vertices[0::2], self._vertex_list.vertices[1::2]):
-                gl.glColor3f(numpy.random.random_sample(), numpy.random.random_sample(), numpy.random.random_sample())
-                gl.glVertex2f(x, y)
-            gl.glEnd()
-            # self._vertex_list.draw(pyglet.gl.GL_LINE_STRIP)
+
+            if False:
+                gl.glBegin(gl.GL_LINE_STRIP)
+                for x, y in zip(self._vertex_list.vertices[0::2], self._vertex_list.vertices[1::2]):
+                    gl.glColor3f(numpy.random.random_sample(), 0.0, 0.0)
+                    gl.glVertex2f(x, y)
+                gl.glEnd()
+            else:
+                self._vertex_list.draw(pyglet.gl.GL_LINE_STRIP)
 
     def on_draw_(self):
         if False:
