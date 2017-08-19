@@ -6,6 +6,13 @@ from .. import VisualizerWindow
 from ... import shader, texture
 
 
+# https://gamedev.stackexchange.com/questions/55945/how-to-draw-image-in-memory-manually-in-pyglet
+# http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-14-render-to-texture/
+# http://pydoc.net/glsvg/0.1/glsvg.render_target/ !!!
+# https://leovt.wordpress.com/2015/10/04/render-to-texture-with-python-3-and-pyglet/
+# https://github.com/leovt/leovt/blob/master/framebuffer.py
+
+
 class ShadertoyVisualizerWindow(VisualizerWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
