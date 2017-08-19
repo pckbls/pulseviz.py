@@ -46,7 +46,8 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
             print('')
             raise e
 
-        self._image = pyglet.image.load('images/bands.png')
+        # self._image = pyglet.image.load('images/bands.png')
+        self._image = pyglet.image.create(512, 2)
         self._texture = self._image.get_texture()
         self._texture_foo_bar = texture.TextureFrameBuffer(self._texture)
 
@@ -54,28 +55,31 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
         with self._lock:
             bin_width = 1.0 / self._samples_n
             self._vertex_list.vertices[0::2] = numpy.arange(0, self._samples_n) * bin_width * self._image.width
-            self._vertex_list.vertices[1::2] = (self._analyzer.buffer / 2.0 + 0.5) * self._image.height * 0.5
+            # self._vertex_list.vertices[1::2] = (self._analyzer.buffer / 2.0 + 0.5) * self._image.height * 0.5
+            self._vertex_list.vertices[1::2] = numpy.ones(self._samples_n)
 
     def on_update(self, dt):
         self._time += dt
 
         with self._texture_foo_bar, self._lock:
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-            gl.glColor3f(0.25, 0.0, 1.0)
-            self._vertex_list.draw(pyglet.gl.GL_LINE_STRIP)
+            gl.glBegin(gl.GL_LINE_STRIP)
+            for x, y in zip(self._vertex_list.vertices[0::2], self._vertex_list.vertices[1::2]):
+                gl.glColor3f(numpy.random.random_sample(), numpy.random.random_sample(), numpy.random.random_sample())
+                gl.glVertex2f(x, y)
+            gl.glEnd()
+            # self._vertex_list.draw(pyglet.gl.GL_LINE_STRIP)
 
     def on_draw_(self):
         if False:
+            self._image.blit(0.0, 0.0, 0.0)
+            return
             gl.glBegin(gl.GL_QUADS)
             gl.glVertex2f(0.0, 0.0)
             gl.glVertex2f(1.0 * self.width, 0.0)
             gl.glVertex2f(1.0 * self.width, 1.0 * self.height)
             gl.glVertex2f(0.0, 1.0 * self.height)
             gl.glEnd()
-
-            self._image.blit(0.0, 0.0, 0.0)
-
-            return
 
         with self._shader:
             gl.glUniform3f(
