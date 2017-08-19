@@ -18,10 +18,16 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
         super().__init__(**kwargs)
 
         self._samples_n = self._analyzer.buffer_size
+        self._fft_size = len(self._analyzer.values)
         self._vertex_list = pyglet.graphics.vertex_list(
             self._samples_n,
             ('v2f/dynamic', numpy.zeros(self._samples_n * 2)),
             ('c3f/dynamic', numpy.ones(self._samples_n * 3)),
+        )
+        self._vertex_list_2 = pyglet.graphics.vertex_list(
+            self._fft_size,
+            ('v2f/dynamic', numpy.zeros(self._fft_size * 2)),
+            ('c3f/dynamic', numpy.ones(self._fft_size * 3)),
         )
         self._lock = threading.Lock()
 
@@ -59,6 +65,11 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
             self._vertex_list.vertices[1::2] = 2.0 * numpy.ones(self._samples_n)
             self._vertex_list.colors[0::3] = (self._analyzer.buffer / 2.0 + 0.5)
 
+            bin_width = 1.0 / self._fft_size
+            self._vertex_list_2.vertices[0::2] = numpy.arange(0, self._fft_size) * bin_width * self._image.width
+            self._vertex_list_2.vertices[1::2] = 1.0 * numpy.ones(self._fft_size)
+            self._vertex_list_2.colors[0::3] = (self._analyzer.values / 120.0) + 1
+
     def on_update(self, dt):
         self._time += dt
 
@@ -73,6 +84,7 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
                 gl.glEnd()
             else:
                 self._vertex_list.draw(pyglet.gl.GL_LINE_STRIP)
+                self._vertex_list_2.draw(pyglet.gl.GL_LINE_STRIP)
 
     def on_draw_(self):
         if False:
