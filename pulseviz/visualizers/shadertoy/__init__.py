@@ -16,13 +16,13 @@ class ShadertoyVisualizer(Visualizer):
 
     def _setup_analyzer(self):
         self._analyzer_kwargs['sample_frequency'] = 44100
-        self._analyzer_kwargs['sample_size'] = 8192
+        self._analyzer_kwargs['sample_size'] = 512
         self._analyzer_kwargs['window_size'] = 512
         self._analyzer_kwargs['window_overlap'] = 0.0
-        self._analyzer_kwargs['window_function'] = 'hanning'
+        self._analyzer_kwargs['window_function'] = 'rectangle'
         self._analyzer_kwargs['weighting'] = 'Z'
-        self._analyzer_kwargs['output'] = 'psd'
-        self._analyzer_kwargs['scaling'] = 'log'
+        self._analyzer_kwargs['output'] = 'fft'
+        self._analyzer_kwargs['scaling'] = 'lin'
         super()._setup_analyzer()
 
     def _setup_window(self):

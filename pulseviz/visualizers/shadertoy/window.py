@@ -19,6 +19,7 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
 
         self._samples_n = self._analyzer.buffer_size
         self._fft_size = len(self._analyzer.values)
+
         self._vertex_list = pyglet.graphics.vertex_list(
             self._samples_n,
             ('v2f/dynamic', numpy.zeros(self._samples_n * 2)),
@@ -36,7 +37,7 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
         with open('pulseviz/shader/shadertoy/vertex_main.glsl') as f:
             vertex_shader_source = f.read()
 
-        with open('pulseviz/shader/InputSound.glsl') as f:
+        with open('pulseviz/shader/Ribbons.glsl') as f:
             fragment_shader_source = f.read()
 
         self._shader = shader.Shader(
@@ -53,38 +54,29 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
             print('')
             raise e
 
-        # self._image = pyglet.image.load('images/bands.png')
         self._image = pyglet.image.create(512, 2)
         self._texture = self._image.get_texture()
         self._texture_foo_bar = texture.TextureFrameBuffer(self._texture)
 
-    def on_sample(self):
-        with self._lock:
-            bin_width = 1.0 / self._samples_n
-            self._vertex_list.vertices[0::2] = numpy.arange(0, self._samples_n) * bin_width * self._image.width
-            self._vertex_list.vertices[1::2] = 2.0 * numpy.ones(self._samples_n)
-            self._vertex_list.colors[0::3] = (self._analyzer.buffer / 2.0 + 0.5)
+        self._vertex_list.vertices[0::2] = numpy.arange(0, self._samples_n) * (1.0 / self._samples_n) * self._image.width
+        self._vertex_list.vertices[1::2] = 2.0 * numpy.ones(self._samples_n)
+        self._vertex_list_2.vertices[0::2] = numpy.arange(0, self._fft_size) * (1.0 / self._fft_size) * self._image.width
+        self._vertex_list_2.vertices[1::2] = 1.0 * numpy.ones(self._fft_size)
 
-            bin_width = 1.0 / self._fft_size
-            self._vertex_list_2.vertices[0::2] = numpy.arange(0, self._fft_size) * bin_width * self._image.width
-            self._vertex_list_2.vertices[1::2] = 1.0 * numpy.ones(self._fft_size)
-            self._vertex_list_2.colors[0::3] = (self._analyzer.values / 120.0) + 1
+    def on_sample(self):
+        # TODO: Unfortunately we cannot update the texture in here as on_sample is called
+        # from another Thread....
+        with self._lock:
+            self._vertex_list.colors[0::3] = (self._analyzer.buffer / 2.0 + 0.5)
+            self._vertex_list_2.colors[0::3] = (self._analyzer.values / 5.0)
 
     def on_update(self, dt):
         self._time += dt
 
         with self._texture_foo_bar, self._lock:
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-
-            if False:
-                gl.glBegin(gl.GL_LINE_STRIP)
-                for x, y in zip(self._vertex_list.vertices[0::2], self._vertex_list.vertices[1::2]):
-                    gl.glColor3f(numpy.random.random_sample(), 0.0, 0.0)
-                    gl.glVertex2f(x, y)
-                gl.glEnd()
-            else:
-                self._vertex_list.draw(pyglet.gl.GL_LINE_STRIP)
-                self._vertex_list_2.draw(pyglet.gl.GL_LINE_STRIP)
+            self._vertex_list.draw(pyglet.gl.GL_LINE_STRIP)
+            self._vertex_list_2.draw(pyglet.gl.GL_LINE_STRIP)
 
     def on_draw_(self):
         if False:

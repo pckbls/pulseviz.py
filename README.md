@@ -60,6 +60,12 @@ the average magnitude of each band.
 
 ![Octave Bands Visualizer](images/bands.png)
 
+## Shadertoy Visualizer
+
+TODO
+
+![Shadertoy Visualizer](images/shadertoy.png)
+
 # Future goals
 
 * Make visualizers configurable
