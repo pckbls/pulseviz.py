@@ -2,8 +2,9 @@ import threading
 import numpy
 import pyglet
 from pyglet import gl
-from .. import VisualizerWindow
-from ... import shader, texture
+from ..dsp.fft import FFT
+from . import visualizer, Visualizer, VisualizerWindow
+from .. import shader, texture
 
 
 # https://gamedev.stackexchange.com/questions/55945/how-to-draw-image-in-memory-manually-in-pyglet
@@ -37,7 +38,7 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
         with open('pulseviz/shader/shadertoy/vertex_main.glsl') as f:
             vertex_shader_source = f.read()
 
-        with open('pulseviz/shader/Ribbons.glsl') as f:
+        with open('pulseviz/shader/shadertoy/toys/SinusWaves.glsl') as f:
             fragment_shader_source = f.read()
 
         self._shader = shader.Shader(
@@ -124,3 +125,32 @@ class ShadertoyVisualizerWindow(VisualizerWindow):
                     -1.0, 1.0 * self.height
                 ])
             )
+
+
+@visualizer(name='shadertoy')
+class ShadertoyVisualizer(Visualizer):
+    ANALYZER_TYPE = FFT
+    VISUALIZER_WINDOW_TYPE = ShadertoyVisualizerWindow
+    WINDOW_TITLE = 'Shadertoy Visualizer'
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def _setup_analyzer(self):
+        self._analyzer_kwargs['sample_frequency'] = 44100
+        self._analyzer_kwargs['sample_size'] = 512
+        self._analyzer_kwargs['window_size'] = 512
+        self._analyzer_kwargs['window_overlap'] = 0.0
+        self._analyzer_kwargs['window_function'] = 'rectangle'
+        self._analyzer_kwargs['weighting'] = 'Z'
+        self._analyzer_kwargs['output'] = 'fft'
+        self._analyzer_kwargs['scaling'] = 'lin'
+        super()._setup_analyzer()
+
+    def _setup_window(self):
+        super()._setup_window()
+
+    def start(self, **kwargs):
+        self._analyzer.on_sample(self._window.on_sample)
+        pyglet.clock.schedule_interval(self._window.on_update, 1 / 60)
+        super().start(**kwargs)
