@@ -1,7 +1,7 @@
 **pulseviz** is a small OpenGL-accelerated audio visualizer for PulseAudio written in Python.
 Right now it's more or less a proof of concept with little to no features.
 
-[![Build Status](https://travis-ci.org/pckbls/pulseviz.svg?branch=master)](https://travis-ci.org/pckbls/pulseviz)
+[![Build Status](https://travis-ci.org/pckbls/pulseviz.py.svg?branch=master)](https://travis-ci.org/pckbls/pulseviz.py)
 
 ![Octave Bands Visualizer](images/bands.png)
 
@@ -11,10 +11,10 @@ pulseviz can be installed via `pip3`:
 
 ```sh
 # System wide...
-sudo pip3 install git+https://github.com/pckbls/pulseviz.git
+sudo pip3 install git+https://github.com/pckbls/pulseviz.py.git
 
 # ...or only for the current user
-pip3 install --user git+https://github.com/pckbls/pulseviz.git
+pip3 install --user git+https://github.com/pckbls/pulseviz.py.git
 ```
 
 # Usage
