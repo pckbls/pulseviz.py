@@ -61,7 +61,7 @@ class FFT(Sampler):
         else:
             raise PulsevizException('Unknown scaling type: {0}'.format(scaling))
 
-        if window_function is 'rectangle':
+        if window_function == 'rectangle':
             self._window_function = numpy.ones(self.buffer_size)
         elif window_function == 'hanning':
             self._window_function = numpy.hanning(self.buffer_size)
